@@ -3,28 +3,26 @@
 #endif
 
 #include <gio/gio.h>
-#include <gio/gnio.h>
 
-#include "options.h"
+#include "gspeechd-options.h"
+#include "gspeechd-server.h"
 
 int main(int argc, char * argv[])
 {
+	const gspeechd_options *options;
 	GOptionContext *context;
-	GSocketService *service;
+	GSpeechdServer *server;
+	GMainLoop *main_loop;
 
-	service = g_threaded_socket_service_new (max_threads);
+	options = gspeechd_options_get (argc, argv);
 
-	if (!g_socket_listener_add_inet_port (G_SOCKET_LISTENER (service),
-	                                      port, NULL, &error))
-	{
-		g_printerr ("%s: %s\n", argv[0], error->message);
-		return 1;
-	}
+	server = gspeechd_server_new (10);
 
-	g_print ("speechd listening on port %d\n", port);
+	g_print ("speechd listening on port %d\n", options->port);
 
-	g_signal_connect (service, "run", G_CALLBACK (handler), NULL);
+	main_loop = g_main_loop_new (NULL, FALSE);
+	g_main_loop_run (main_loop);
 
-	g_main_loop_run (g_main_loop_new (NULL, FALSE));
-	g_assert_not_reached ();
+	g_object_unref (server);
+	g_main_loop_unref (main_loop);
 }

@@ -16,7 +16,7 @@ int main(int argc, char * argv[])
 
 	options = gspeechd_options_get (argc, argv);
 
-	server = gspeechd_server_new (10);
+	server = gspeechd_server_new (options->port);
 
 	g_print ("speechd listening on port %d\n", options->port);
 

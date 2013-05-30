@@ -61,9 +61,14 @@ gspeechd_read_line_cb (GInputStream *stream,
                        gpointer user_data);
 
 GSpeechdServer *
-gspeechd_server_new (int max_threads)
+gspeechd_server_new (int port)
 {
-   return g_object_new (GSPEECHD_TYPE_SERVER, "max-threads", max_threads, NULL);
+	GError *error = NULL;
+
+	GSpeechdServer *server = g_object_new (GSPEECHD_TYPE_SERVER, NULL);
+
+	g_socket_listener_add_inet_port (G_SOCKET_LISTENER (server), port, NULL, &error);
+	return server;
 }
 
 static gboolean
@@ -79,6 +84,8 @@ gspeechd_server_incoming (GSocketService    *service,
 
 	g_return_val_if_fail (GSPEECHD_IS_SERVER (server), FALSE);
 	g_return_val_if_fail (G_IS_SOCKET_CONNECTION (connection), FALSE);
+
+	g_printf ("%s\n", __FUNCTION__);
 
 	priv = server->priv;
 

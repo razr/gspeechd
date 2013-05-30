@@ -1,4 +1,4 @@
-/* gspeechd-client-context.h
+/* ssip.c
  *
  * Copyright (C) 2013 Brailcom, o.p.s.
  *
@@ -18,22 +18,25 @@
  * Author: Andrei Kholodnyi <andrei.kholodnyi@gmail.com>
  */
 
-#ifndef GSPEECHD_CLIENT_CONTEXT_H
-#define GSPEECHD_CLIENT_CONTEXT_H
+#include <glib.h>
 
-#include <glib-object.h>
+#include "ssip.h"
 
-G_BEGIN_DECLS
+struct _SsipCommand
+{
+	volatile gint   ref_count;
 
-#define GSPEECHD_TYPE_CLIENT_CONTEXT (gspeechd_client_context_get_type())
+	SsipCmd  		cmd;
+	gchar			param;
+};
 
-typedef struct _GSpeechdClientContext GSpeechdClientContext;
+SsipCommand *
+ssip_command_new (gchar *line)
+{
+	SsipCommand *command;
 
-GType                  gspeechd_client_context_get_type (void) G_GNUC_CONST;
-GSpeechdClientContext *gspeechd_client_context_ref      (GSpeechdClientContext *context);
-void                   gspeechd_client_context_unref    (GSpeechdClientContext *context);
+	command = g_slice_new0 (SsipCommand);
+	command->ref_count = 1;
 
-G_END_DECLS
-
-#endif /* GSPEECHD_CLIENT_CONTEXT_H */
-
+	return command; 
+}

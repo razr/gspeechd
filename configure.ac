@@ -38,5 +38,6 @@ AC_SUBST(GIO_LIBS)
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile
+                 src/ssip/Makefile
                  src/server/Makefile])
 AC_OUTPUT

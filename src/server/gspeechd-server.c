@@ -19,6 +19,7 @@
  */
 
 #include "gspeechd-server.h"
+#include "ssip/ssip.h"
 
 G_DEFINE_TYPE(GSpeechdServer, gspeechd_server, G_TYPE_SOCKET_SERVICE)
 
@@ -168,6 +169,7 @@ gspeechd_read_line_cb (GInputStream *stream,
 	                                          &error);
 	g_printf ("%s\n",s);
 
+	ssip_command_new (s);
 	g_free(s);
 }
 
@@ -215,39 +217,6 @@ gspeechd_client_context_fail (GSpeechdClientContext *client)
    g_io_stream_close(G_IO_STREAM(client->connection),
                      client->cancellable,
                      NULL);
-}
-
-gchar *
-gspeechd_client_context_get_uri (GSpeechdClientContext *client)
-{
-   GInetSocketAddress *saddr;
-   GSocketAddress *addr;
-   GInetAddress *iaddr;
-   gchar *str;
-   gchar *str2;
-   guint port;
-
-   g_assert(client);
-
-   if (!(addr = g_socket_connection_get_remote_address(client->connection,
-                                                       NULL))) {
-      return NULL;
-   }
-
-   if ((saddr = G_INET_SOCKET_ADDRESS(addr))) {
-      iaddr = g_inet_socket_address_get_address(saddr);
-      str = g_inet_address_to_string(iaddr);
-      port = g_inet_socket_address_get_port(saddr);
-      str2 = g_strdup_printf("%s:%u", str, port);
-      g_free(str);
-      return str2;
-   }
-
-   /*
-    * TODO: Support socket addresses.
-    */
-
-   return NULL;
 }
 
 /**

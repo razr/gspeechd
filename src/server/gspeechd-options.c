@@ -24,11 +24,12 @@
 
 #define GSPEECHD_DEFAULT_PORT 6560
 
-static gspeechd_options cmd_options = {.port = GSPEECHD_DEFAULT_PORT};
+static gspeechd_options cmd_options = {.port = GSPEECHD_DEFAULT_PORT, .log_level = 1};
 
 static GOptionEntry options[] =
 {
-	{ "port",     'p', 0, G_OPTION_ARG_INT, &cmd_options.port, "Local port to bind to", NULL },
+	{ "port", 		'p', 0, G_OPTION_ARG_INT, &cmd_options.port, "Local port to bind to", NULL },
+	{ "log-level",  'l', 0, G_OPTION_ARG_INT, &cmd_options.log_level, "Set log level (1...5)", NULL },
 	{ NULL }
 };
 
@@ -40,7 +41,9 @@ const gspeechd_options * gspeechd_options_get (int argc, char * argv[])
 
 	context = g_option_context_new (" - common interface for speech synthesis");
 
-	g_option_context_set_summary (context, "put summary here");
+	// g_option_context_set_summary (context, "gspeechd is a device independent layer for speech synthesis that provides a common easy to use interface for both client applications (programs that want to speak) and for software synthesizers (programs actually able to convert text to speech).");
+	g_option_context_add_main_entries (context, options, argv[0]);
+
 	retval = g_option_context_parse (context, &argc, &argv, &error);
 	g_option_context_free (context);
 

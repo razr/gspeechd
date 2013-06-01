@@ -158,18 +158,18 @@ gspeechd_read_line_cb (GInputStream *stream,
                        GAsyncResult *res,
                        gpointer user_data)
 {
-	GSpeechdClientContext *client = user_data;
+	GSpeechdClientContext *context = user_data;
 	char *s;
 	gsize len;
 	GError *error = NULL;
-
+	SsipCommand *cmd;
 	s = g_data_input_stream_read_line_finish (G_DATA_INPUT_STREAM(stream),
 	                                          res,
                                               &len,
 	                                          &error);
 	g_printf ("%s\n",s);
-
-	ssip_command_new (s);
+	
+	cmd = ssip_command_new (s);
 	g_free(s);
 }
 

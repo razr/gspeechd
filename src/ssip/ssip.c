@@ -35,8 +35,12 @@ ssip_command_new (gchar *line)
 {
 	SsipCommand *command;
 
+	if (line == NULL)
+		return NULL;
+
 	command = g_slice_new0 (SsipCommand);
 	command->ref_count = 1;
 
 	return command; 
 }
+

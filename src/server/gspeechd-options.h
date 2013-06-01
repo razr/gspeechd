@@ -27,6 +27,7 @@ G_BEGIN_DECLS
 
 typedef struct _gspeechd_options {
 	gint port;
+	gint log_level;
 } gspeechd_options;
 
 const gspeechd_options * 

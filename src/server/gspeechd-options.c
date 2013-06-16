@@ -23,13 +23,21 @@
 #include "gspeechd-options.h"
 
 #define GSPEECHD_DEFAULT_PORT 6560
+#define GSPEECHD_DEFAULT_LOG_LEVEL 1
+#define GSPEECHD_DEFAULT_LOG_DIR "/var/log/gspeechd"
 
-static gspeechd_options cmd_options = {.port = GSPEECHD_DEFAULT_PORT, .log_level = 1};
+static gspeechd_options cmd_options = 
+{
+	.port = GSPEECHD_DEFAULT_PORT,
+	.log_level = GSPEECHD_DEFAULT_LOG_LEVEL,
+	.log_dir = GSPEECHD_DEFAULT_LOG_DIR
+};
 
 static GOptionEntry options[] =
 {
 	{ "port", 		'p', 0, G_OPTION_ARG_INT, &cmd_options.port, "Local port to bind to", NULL },
 	{ "log-level",  'l', 0, G_OPTION_ARG_INT, &cmd_options.log_level, "Set log level (1...5)", NULL },
+	{ "log-dir",	'L', 0, G_OPTION_ARG_STRING, &cmd_options.log_dir, "Set path to logging", NULL },
 	{ NULL }
 };
 

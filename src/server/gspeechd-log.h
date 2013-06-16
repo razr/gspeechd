@@ -1,4 +1,4 @@
-/* gspeechd-options.c
+/* gspeechd-log.h
  *
  * Copyright (C) 2013 Brailcom, o.p.s.
  *
@@ -18,22 +18,19 @@
  * Author: Andrei Kholodnyi <andrei.kholodnyi@gmail.com>
  */
 
-#ifndef GSPEECHD_OPTIONS_H
-#define GSPEECHD_OPTIONS_H
+#ifndef GSPEECHD_LOG_H
+#define GSPEECHD_LOG_H
 
 #include <glib.h>
 
 G_BEGIN_DECLS
 
-typedef struct _gspeechd_options {
-	gint	port;
-	gint	log_level;
-	gchar  *log_dir;
-} gspeechd_options;
+gboolean
+gspeechd_log_init (gint verbosity, gchar *dirname);
 
-const gspeechd_options * 
-gspeechd_options_get (int argc, char * argv[]);
+gboolean
+gspeechd_log_finalize (void);
 
 G_END_DECLS
 
-#endif /* GSPEECHD_OPTIONS_H */
+#endif /* GSPEECHD_LOG_H */

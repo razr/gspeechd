@@ -6,6 +6,7 @@
 
 #include "gspeechd-options.h"
 #include "gspeechd-server.h"
+#include "gspeechd-log.h"
 
 int main(int argc, char * argv[])
 {
@@ -29,4 +30,6 @@ int main(int argc, char * argv[])
 	g_main_loop_unref (main_loop);
 
 	gspeechd_log_finalize ();
+
+	return 0;
 }

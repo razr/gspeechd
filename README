@@ -1,0 +1,2 @@
+export SPEECHD_ADDRESS=inet_socket
+./spd-say Hello

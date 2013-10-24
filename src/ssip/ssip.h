@@ -47,35 +47,12 @@ SsipCommand *ssip_command_new (gchar *line);
  *
  * Flags used when adding a new directory to be indexed in the #TrackerIndexingTree.
  */
-typedef enum {
-	SSIP_CMD_SPEAK,
-	SSIP_CMD_KEY,
-	SSIP_CMD_CHAR,
-	SSIP_CMD_SOUND_ICON,
-	SSIP_CMD_SET,
-	SSIP_CMD_GET,
-	SSIP_CMD_LIST,
-	SSIP_CMD_HISTORY,
-	SSIP_CMD_QUIT,
-	SSIP_CMD_HELP,
-
-	SSIP_CMD_STOP,
-	SSIP_CMD_CANCEL,
-	SSIP_CMD_PAUSE,
-	SSIP_CMD_RESUME,
-
-	SSIP_CMD_NOTIFICATION,
-
-	SSIP_CMD_DEBUG
-} SsipCmd;
-
 
 typedef enum {
 	SSIP_CLIENT_ID_ID,
 	SSIP_CLIENT_ID_ALL,
 	SSIP_CLIENT_ID_SELF
 } SsipClientId;
-
 
 typedef enum {
 	SSIP_SET_PARAM_CLIENT_NAME,
@@ -108,6 +85,9 @@ typedef enum {
 	SSIP_EVENT_RESUME,
 	SSIP_EVENT_INDEX_MARK
 } SsipEvent;
+
+#define OK_HELP_SENT                            "248 OK HELP SENT\r\n"
+#define C_OK_HELP                               "248"
 
 G_END_DECLS
 

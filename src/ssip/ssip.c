@@ -21,8 +21,8 @@
 #include <glib.h>
 #include <glib/gprintf.h>
 
-#include "ssip-enums.h"
 #include "ssip.h"
+#include "ssip-enum-types.h"
 
 struct _SsipCommand
 {
@@ -34,32 +34,32 @@ struct _SsipCommand
 	gchar			*value;
 };
 
-SsipCommand *
-ssip_command_new (gchar *line)
+inline static SsipCmd
+string_to_ssip_cmd (const gchar * cmd)
 {
-	SsipCommand *ssip_cmd;
-	gchar **ps, *l_str;
+        GType type;
+        GEnumClass *enum_class;
+        GEnumValue *enum_value;
 
-	if (line == NULL)
-		return NULL;
+        type = ssip_cmd_get_type ();
+        enum_class = G_ENUM_CLASS (g_type_class_peek (type));
+        enum_value = g_enum_get_value_by_nick (enum_class, cmd);
 
-	/* parse command line */
-	ps = g_strsplit (line, " ",  4);
+        if (!enum_value) {
+                return -1;
+        }
 
-	l_str = g_ascii_strdown (ps[0], -1);
-	if (g_strcmp0 ("help", l_str) != 0) {
-		
-	}
-	g_strfreev (ps);
-
-	ssip_cmd = g_slice_new0 (SsipCommand);
-	ssip_cmd->ref_count = 1;
-
-	return ssip_cmd; 
+        return enum_value->value;
 }
 
 static gchar*
-parse_help(void)
+parse_set (gchar** ps)
+{
+	return NULL;
+}
+
+static gchar*
+parse_help (gchar** ps)
 {
     char *help;
 
@@ -80,3 +80,40 @@ parse_help(void)
     return help;
 }
 
+SsipCommand *
+ssip_command_new (gchar *line)
+{
+	SsipCommand *ssip_cmd;
+	gchar **ps, *s;
+	SsipCmd cmd;
+
+	if (line == NULL)
+		return NULL;
+
+	/* parse command line */
+	ps = g_strsplit (line, " ",  4);
+
+	s = g_ascii_strdown (ps[0], -1);
+
+	cmd = string_to_ssip_cmd (s);
+
+	/* TODO: generate it automatically */
+	switch (cmd) {
+		case SSIP_CMD_SET:
+			parse_set (&ps[1]);
+			break;
+		case SSIP_CMD_HELP:
+			parse_help (NULL);
+			break;
+		default:
+			break;
+	}
+
+	g_free (s);
+	g_strfreev (ps);
+
+	ssip_cmd = g_slice_new0 (SsipCommand);
+	ssip_cmd->ref_count = 1;
+
+	return ssip_cmd; 
+}

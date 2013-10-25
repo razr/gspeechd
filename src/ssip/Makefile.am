@@ -10,10 +10,10 @@ noinst_HEADERS = \
 	ssip-enums.h
 
 ssip-enum-types.h: ssip-enum-types.h.template
-	$(AM_V_GEN) (cd $(srcdir) && $(GLIB_MKENUMS) --template ssip-enum-types.h.template $(noinst_HEADERS)) > $@
+	$(AM_V_GEN) (cd $(srcdir) && $(GLIB_MKENUMS) --template ssip-enum-types.h.template ssip-enums.h) > $@
 
 ssip-enum-types.c: ssip-enum-types.c.template ssip-enum-types.h
-	$(AM_V_GEN) (cd $(srcdir) && $(GLIB_MKENUMS) --template ssip-enum-types.c.template $(noinst_HEADERS)) > $@
+	$(AM_V_GEN) (cd $(srcdir) && $(GLIB_MKENUMS) --template ssip-enum-types.c.template ssip-enums.h) > $@
 
 CLEANFILES =	\
 	ssip-enum-types.c	\

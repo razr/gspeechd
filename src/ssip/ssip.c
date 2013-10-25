@@ -96,6 +96,8 @@ ssip_command_new (gchar *line)
 	s = g_ascii_strdown (ps[0], -1);
 
 	cmd = string_to_ssip_cmd (s);
+	if (cmd == -1)
+		return NULL;
 
 	/* TODO: generate it automatically */
 	switch (cmd) {

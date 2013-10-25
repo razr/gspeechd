@@ -73,9 +73,6 @@ typedef enum {
 	SSIP_EVENT_INDEX_MARK
 } SsipEvent;
 
-#define OK_HELP_SENT                            "248 OK HELP SENT\r\n"
-#define C_OK_HELP                               "248"
-
 G_END_DECLS
 
 #endif /* SSIP_H */

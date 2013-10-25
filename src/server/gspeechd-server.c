@@ -38,6 +38,19 @@ struct _GSpeechdClientContext
    GSpeechdServer    *server;
    guint8            *incoming;
    gboolean           failed;
+
+	/* msg settings */
+	/* msg mode: DATA, SSML */
+	/* msg prio */
+	/* msg type = TEXT, CHAR, ICON etc. */
+	/* notification */
+
+	/* status: speaking, paused, stoped */
+
+	/* output modules: espeak, etc */
+	/* audio module: alsa, pulse, etc */
+	/* log level */
+	/* history */
 };
 
 enum
@@ -168,8 +181,11 @@ gspeechd_read_line_cb (GInputStream *stream,
                                               &len,
 	                                          &error);
 	g_printf ("%s\n",s);
-	
+
+	/* parse SSIP command */
 	cmd = ssip_command_new (s);
+
+	/* process SSIP command */
 	g_free(s);
 }
 

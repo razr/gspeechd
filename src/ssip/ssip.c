@@ -52,10 +52,10 @@ string_to_ssip_cmd (const gchar * cmd)
         return enum_value->value;
 }
 
-static gchar*
-parse_set (gchar** ps)
+static SsipStatus
+parse_set (gchar** ps, SsipCommand *cmd)
 {
-	return NULL;
+	return OK_NOT_IMPLEMENTED_DOES_NOTHING;
 }
 
 static gchar*
@@ -66,16 +66,16 @@ parse_help (gchar** ps)
     help = (char*) g_malloc(1024 * sizeof(char));
 
     sprintf(help, 
-            C_OK_HELP"-  SPEAK           -- say text \r\n"
-            C_OK_HELP"-  KEY             -- say a combination of keys \r\n"
-            C_OK_HELP"-  CHAR            -- say a character \r\n"
-            C_OK_HELP"-  SOUND_ICON      -- execute a sound icon \r\n"
-            C_OK_HELP"-  SET             -- set a parameter \r\n"
-            C_OK_HELP"-  GET             -- get a current parameter \r\n"
-            C_OK_HELP"-  LIST            -- list available arguments \r\n"
-            C_OK_HELP"-  HISTORY         -- commands related to history \r\n"
-            C_OK_HELP"-  QUIT            -- close the connection \r\n"
-            OK_HELP_SENT);
+            "-  SPEAK           -- say text \r\n"
+            "-  KEY             -- say a combination of keys \r\n"
+            "-  CHAR            -- say a character \r\n"
+            "-  SOUND_ICON      -- execute a sound icon \r\n"
+            "-  SET             -- set a parameter \r\n"
+            "-  GET             -- get a current parameter \r\n"
+            "-  LIST            -- list available arguments \r\n"
+            "-  HISTORY         -- commands related to history \r\n"
+            "-  QUIT            -- close the connection \r\n"
+            "OK_HELP_SENT");
 
     return help;
 }
@@ -86,6 +86,7 @@ ssip_command_new (gchar *line)
 	SsipCommand *ssip_cmd;
 	gchar **ps, *s;
 	SsipCmd cmd;
+	SsipStatus status;
 
 	if (line == NULL)
 		return NULL;
@@ -96,13 +97,17 @@ ssip_command_new (gchar *line)
 	s = g_ascii_strdown (ps[0], -1);
 
 	cmd = string_to_ssip_cmd (s);
-	if (cmd == -1)
+	if (cmd == -1) {
+		g_free (s);
+		g_strfreev (ps);
 		return NULL;
+	}
 
-	/* TODO: generate it automatically */
-	switch (cmd) {
+	ssip_cmd = g_slice_new0 (SsipCommand);
+	ssip_cmd->cmd = cmd;
+	switch (ssip_cmd->cmd) {
 		case SSIP_CMD_SET:
-			parse_set (&ps[1]);
+			status = parse_set (&ps[1], ssip_cmd);
 			break;
 		case SSIP_CMD_HELP:
 			parse_help (NULL);
@@ -114,7 +119,6 @@ ssip_command_new (gchar *line)
 	g_free (s);
 	g_strfreev (ps);
 
-	ssip_cmd = g_slice_new0 (SsipCommand);
 	ssip_cmd->ref_count = 1;
 
 	return ssip_cmd; 

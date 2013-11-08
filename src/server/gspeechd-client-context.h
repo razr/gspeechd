@@ -22,6 +22,7 @@
 #define GSPEECHD_CLIENT_CONTEXT_H
 
 #include <glib-object.h>
+#include <gio/gio.h>
 
 G_BEGIN_DECLS
 
@@ -32,6 +33,10 @@ typedef struct _GSpeechdClientContext GSpeechdClientContext;
 GType                  gspeechd_client_context_get_type (void) G_GNUC_CONST;
 GSpeechdClientContext *gspeechd_client_context_ref      (GSpeechdClientContext *context);
 void                   gspeechd_client_context_unref    (GSpeechdClientContext *context);
+GSpeechdClientContext *gspeechd_client_context_new (GSocketConnection    *connection);
+void gspeechd_client_context_dispatch (GSpeechdClientContext *client);
+
+void gspeechd_client_context_fail (GSpeechdClientContext *client);
 
 G_END_DECLS
 

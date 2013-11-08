@@ -53,6 +53,8 @@ struct _GSpeechdServerClass
    GThreadedSocketServiceClass parent_class;
 
 	/* signals */
+	/* client added */
+	/* client removed */
 };
 
 GType    	    gspeechd_server_get_type         (void) G_GNUC_CONST;

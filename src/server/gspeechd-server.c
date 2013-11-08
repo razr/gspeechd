@@ -17,6 +17,7 @@
  * 
  * Author: Andrei Kholodnyi <andrei.kholodnyi@gmail.com>
  */
+#include <glib.h>
 
 #include "gspeechd-server.h"
 #include "ssip/ssip.h"
@@ -28,46 +29,12 @@ struct _GSpeechdServerPrivate
    GHashTable *client_contexts;
 };
 
-struct _GSpeechdClientContext
-{
-   volatile gint      ref_count;
-
-   GCancellable      *cancellable;
-   GSocketConnection *connection;
-   GDataOutputStream *output;
-   GSpeechdServer    *server;
-   guint8            *incoming;
-   gboolean           failed;
-
-	/* msg settings */
-	/* msg mode: DATA, SSML */
-	/* msg prio */
-	/* msg type = TEXT, CHAR, ICON etc. */
-	/* notification */
-
-	/* status: speaking, paused, stoped */
-
-	/* output modules: espeak, etc */
-	/* audio module: alsa, pulse, etc */
-	/* log level */
-	/* history */
-};
-
 enum
 {
    LAST_SIGNAL
 };
 
 static guint gSignals[LAST_SIGNAL];
-
-static GSpeechdClientContext *
-gspeechd_client_context_new (GSpeechdServer       *server,
-                             GSocketConnection    *connection);
-static void
-gspeechd_client_context_dispatch (GSpeechdClientContext *client);
-
-static void
-gspeechd_client_context_fail (GSpeechdClientContext *client);
 
 static void
 gspeechd_read_line_cb (GInputStream *stream,
@@ -106,7 +73,7 @@ gspeechd_server_incoming (GSocketService    *service,
 	/*
 	 * Store the client context for tracking things
 	 */
-	client = gspeechd_client_context_new (server, connection);
+	client = gspeechd_client_context_new (connection);
 	g_hash_table_insert (priv->client_contexts, connection, client);
 
 	/*
@@ -184,108 +151,7 @@ gspeechd_read_line_cb (GInputStream *stream,
 
 	/* parse SSIP command */
 	cmd = ssip_command_new (s);
+	g_free(s);
 
 	/* process SSIP command */
-	g_free(s);
-}
-
-
-static void
-gspeechd_client_context_dispose (GSpeechdClientContext *context)
-{
-   g_clear_object (&context->cancellable);
-   g_clear_object (&context->connection);
-   g_clear_object (&context->output);
-
-   if (context->server) {
-      g_object_remove_weak_pointer (G_OBJECT(context->server),
-                                    (gpointer *)&context->server);
-   }
-}
-
-static GSpeechdClientContext *
-gspeechd_client_context_new (GSpeechdServer       *server,
-                             GSocketConnection *connection)
-{
-	GSpeechdClientContext *context;
-	GOutputStream *output_stream;
-
-	context = g_slice_new0 (GSpeechdClientContext);
-	context->ref_count = 1;
-	context->cancellable = g_cancellable_new ();
-	context->server = server;
-	context->connection = g_object_ref (connection);
-	context->failed = FALSE;
-
-	output_stream = g_io_stream_get_output_stream (G_IO_STREAM(connection));
-	context->output = g_data_output_stream_new (output_stream);
-	g_object_add_weak_pointer(G_OBJECT(context->server),
-                              (gpointer *)&context->server);
-   return (context);
-}
-
-static void
-gspeechd_client_context_fail (GSpeechdClientContext *client)
-{
-   g_assert(client);
-
-   client->failed = TRUE;
-   g_io_stream_close(G_IO_STREAM(client->connection),
-                     client->cancellable,
-                     NULL);
-}
-
-/**
- * gspeechd_client_context_ref:
- * @context: A #GSpeechdClientContext.
- *
- * Atomically increments the reference count of @context by one.
- *
- * Returns: (transfer full): A reference to @context.
- */
-GSpeechdClientContext *
-gspeechd_client_context_ref (GSpeechdClientContext *context)
-{
-   g_return_val_if_fail(context != NULL, NULL);
-   g_return_val_if_fail(context->ref_count > 0, NULL);
-
-   g_atomic_int_inc(&context->ref_count);
-   return (context);
-}
-
-/**
- * gspeechd_client_context_unref:
- * @context: A GSpeechdClientContext.
- *
- * Atomically decrements the reference count of @context by one.  When the
- * reference count reaches zero, the structure will be destroyed and
- * freed.
- */
-void
-gspeechd_client_context_unref (GSpeechdClientContext *context)
-{
-   g_return_if_fail (context != NULL);
-   g_return_if_fail (context->ref_count > 0);
-
-   if (g_atomic_int_dec_and_test (&context->ref_count)) {
-      gspeechd_client_context_dispose (context);
-      g_slice_free (GSpeechdClientContext, context);
-   }
-}
-
-GType
-gspeechd_client_context_get_type (void)
-{
-   static gsize initialized;
-   static GType type_id;
-
-   if (g_once_init_enter(&initialized)) {
-      type_id = g_boxed_type_register_static (
-            "GSpeechDClientContext",
-            (GBoxedCopyFunc)gspeechd_client_context_ref,
-            (GBoxedFreeFunc)gspeechd_client_context_unref);
-      g_once_init_leave (&initialized, TRUE);
-   }
-
-   return type_id;
 }

@@ -23,8 +23,6 @@
 
 #include <gio/gio.h>
 
-#include "gspeechd-client-context.h"
-
 G_BEGIN_DECLS
 
 #define GSPEECHD_TYPE_SERVER            (gspeechd_server_get_type())

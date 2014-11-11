@@ -22,6 +22,7 @@
 #include <gio/gio.h>
 
 #include "gspeechd-client-context.h"
+#include "ssip/ssip.h"
 
 struct _GSpeechdClientContext
 {
@@ -48,6 +49,10 @@ struct _GSpeechdClientContext
 	/* history */
 };
 
+static void
+gspeechd_client_read_line_cb (GInputStream *stream,
+                              GAsyncResult *res,
+                              gpointer user_data);
 
 void
 gspeechd_client_context_dispose (GSpeechdClientContext *context)
@@ -62,12 +67,26 @@ gspeechd_client_context_new (GSocketConnection *connection)
 {
 	GSpeechdClientContext *context;
 	GOutputStream *output_stream;
+	GInputStream *input_stream;
+	GDataInputStream *data_stream;
 
 	context = g_slice_new0 (GSpeechdClientContext);
 	context->ref_count = 1;
 	context->cancellable = g_cancellable_new ();
 	context->connection = g_object_ref (connection);
 	context->failed = FALSE;
+
+	/*
+	 * Start listening for the message
+	 */
+	input_stream = g_io_stream_get_input_stream(G_IO_STREAM(connection));
+	data_stream = g_data_input_stream_new (input_stream);
+
+	g_data_input_stream_read_line_async(data_stream,
+							G_PRIORITY_DEFAULT,
+							context->cancellable,
+							(GAsyncReadyCallback)gspeechd_client_read_line_cb,
+							gspeechd_client_context_ref (context));
 
 	output_stream = g_io_stream_get_output_stream (G_IO_STREAM(connection));
 	context->output = g_data_output_stream_new (output_stream);
@@ -139,4 +158,27 @@ gspeechd_client_context_get_type (void)
    }
 
    return type_id;
+}
+
+static void
+gspeechd_client_read_line_cb (GInputStream *stream,
+                       GAsyncResult *res,
+                       gpointer user_data)
+{
+	GSpeechdClientContext *context = user_data;
+	char *s;
+	gsize len;
+	GError *error = NULL;
+	SsipCommand *cmd;
+	s = g_data_input_stream_read_line_finish (G_DATA_INPUT_STREAM(stream),
+	                                          res,
+                                              &len,
+	                                          &error);
+	g_printf ("%s\n",s);
+
+	/* parse SSIP command */
+	cmd = ssip_command_new (s);
+	g_free(s);
+
+	/* process SSIP command */
 }

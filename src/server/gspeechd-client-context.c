@@ -30,6 +30,7 @@ struct _GSpeechdClientContext
 
    GCancellable      *cancellable;
    GSocketConnection *connection;
+	GDataInputStream  *input;
    GDataOutputStream *output;
 
    guint8            *incoming;
@@ -59,6 +60,7 @@ gspeechd_client_context_dispose (GSpeechdClientContext *context)
 {
    g_clear_object (&context->cancellable);
    g_clear_object (&context->connection);
+   g_clear_object (&context->input);
    g_clear_object (&context->output);
 }
 
@@ -68,7 +70,6 @@ gspeechd_client_context_new (GSocketConnection *connection)
 	GSpeechdClientContext *context;
 	GOutputStream *output_stream;
 	GInputStream *input_stream;
-	GDataInputStream *data_stream;
 
 	context = g_slice_new0 (GSpeechdClientContext);
 	context->ref_count = 1;
@@ -80,9 +81,9 @@ gspeechd_client_context_new (GSocketConnection *connection)
 	 * Start listening for the message
 	 */
 	input_stream = g_io_stream_get_input_stream(G_IO_STREAM(connection));
-	data_stream = g_data_input_stream_new (input_stream);
+	context->input = g_data_input_stream_new (input_stream);
 
-	g_data_input_stream_read_line_async(data_stream,
+	g_data_input_stream_read_line_async(context->input,
 							G_PRIORITY_DEFAULT,
 							context->cancellable,
 							(GAsyncReadyCallback)gspeechd_client_read_line_cb,

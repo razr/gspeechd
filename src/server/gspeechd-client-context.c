@@ -182,4 +182,5 @@ gspeechd_client_read_line_cb (GInputStream *stream,
 	g_free(s);
 
 	/* process SSIP command */
+	/* when QUIT received, send an event connection_closed */
 }

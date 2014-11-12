@@ -31,10 +31,12 @@ struct _GSpeechdServerPrivate
 
 enum
 {
+   CLIENT_ADDED,
+   CLIENT_REMOVED,
    LAST_SIGNAL
 };
 
-static guint gSignals[LAST_SIGNAL];
+static guint signals[LAST_SIGNAL];
 
 GSpeechdServer *
 gspeechd_server_new (int port)
@@ -69,6 +71,8 @@ gspeechd_server_incoming (GSocketService    *service,
 	client = gspeechd_client_context_new (connection);
 	g_hash_table_insert (priv->client_contexts, connection, client);
 
+	g_signal_emit (server, signals[CLIENT_ADDED], 0);
+
 	return TRUE;
 }
 
@@ -94,6 +98,27 @@ gspeechd_server_class_init (GSpeechdServerClass *klass)
 
    object_class = G_OBJECT_CLASS(klass);
    object_class->finalize = gspeechd_server_finalize;
+
+	signals [CLIENT_ADDED] =
+		g_signal_new ("client-added",
+		              G_OBJECT_CLASS_TYPE (object_class),
+		              G_SIGNAL_RUN_LAST,
+		              G_STRUCT_OFFSET (GSpeechdServerClass, client_added),
+		              NULL, NULL,
+		              g_cclosure_marshal_VOID__STRING,
+		              G_TYPE_NONE, 1,
+		              G_TYPE_STRING);
+
+	signals [CLIENT_ADDED] =
+		g_signal_new ("client-removed",
+		              G_OBJECT_CLASS_TYPE (object_class),
+		              G_SIGNAL_RUN_LAST,
+		              G_STRUCT_OFFSET (GSpeechdServerClass, client_removed),
+		              NULL, NULL,
+		              g_cclosure_marshal_VOID__STRING,
+		              G_TYPE_NONE, 1,
+		              G_TYPE_STRING);
+
    g_type_class_add_private(object_class, sizeof(GSpeechdServerPrivate));
 
    service_class = G_SOCKET_SERVICE_CLASS(klass);

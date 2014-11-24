@@ -46,11 +46,6 @@ SsipCommand *ssip_command_new (gchar *line);
  * @SSIP_CMD_HELP: help.
  */
 
-typedef enum {
-	SSIP_CLIENT_ID_ID,
-	SSIP_CLIENT_ID_ALL,
-	SSIP_CLIENT_ID_SELF
-} SsipClientId;
 
 typedef enum {
 	SSIP_LIST_PARAM_OUTPUT_MODULES,

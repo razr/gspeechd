@@ -43,6 +43,12 @@ typedef enum {
 } SsipCmd;
 
 typedef enum {
+	SSIP_CLIENT_ID_ID,
+	SSIP_CLIENT_ID_ALL,
+	SSIP_CLIENT_ID_SELF
+} SsipClientId;
+
+typedef enum {
 	SSIP_SET_PARAM_CLIENT_NAME,
 	SSIP_SET_PARAM_OUTPUT_MODULE,
 	SSIP_SET_PARAM_AUDIO_MODULE,

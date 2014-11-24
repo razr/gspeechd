@@ -20,13 +20,13 @@
 #include <glib.h>
 
 #include "gspeechd-server.h"
-#include "gspeechd-client-context.h"
+#include "gspeechd-client.h"
 
 G_DEFINE_TYPE(GSpeechdServer, gspeechd_server, G_TYPE_SOCKET_SERVICE)
 
 struct _GSpeechdServerPrivate
 {
-   GHashTable *client_contexts;
+   GHashTable *clients;
 };
 
 enum
@@ -55,7 +55,7 @@ gspeechd_server_incoming (GSocketService    *service,
                           GObject           *source_object)
 {
 	GSpeechdServerPrivate *priv;
-	GSpeechdClientContext *client;
+	GSpeechdClient *client;
 	GSpeechdServer *server = (GSpeechdServer *)service;
 
 	g_return_val_if_fail (GSPEECHD_IS_SERVER (server), FALSE);
@@ -66,10 +66,10 @@ gspeechd_server_incoming (GSocketService    *service,
 	priv = server->priv;
 
 	/*
-	 * Store the client context for tracking things
+	 * Store the client for tracking things
 	 */
-	client = gspeechd_client_context_new (connection);
-	g_hash_table_insert (priv->client_contexts, connection, client);
+	client = gspeechd_client_new (connection);
+	g_hash_table_insert (priv->clients, connection, client);
 
 	g_signal_emit (server, signals[CLIENT_ADDED], 0);
 
@@ -83,7 +83,7 @@ gspeechd_server_finalize (GObject *object)
 
    priv = GSPEECHD_SERVER(object)->priv;
 
-   g_hash_table_unref(priv->client_contexts);
+   g_hash_table_unref(priv->clients);
 
    G_OBJECT_CLASS(gspeechd_server_parent_class)->finalize(object);
 
@@ -132,10 +132,9 @@ gspeechd_server_init (GSpeechdServer *server)
    server->priv = G_TYPE_INSTANCE_GET_PRIVATE(server,
                                               GSPEECHD_TYPE_SERVER,
                                               GSpeechdServerPrivate);
-   server->priv->client_contexts =
+   server->priv->clients =
       g_hash_table_new_full(g_direct_hash,
                             g_direct_equal,
                             NULL,
-                            (GDestroyNotify)gspeechd_client_context_unref);
+                            (GDestroyNotify)gspeechd_client_unref);
 }
-

@@ -11,7 +11,6 @@
 int main(int argc, char * argv[])
 {
 	const gspeechd_options *options;
-	GOptionContext *context;
 	GSpeechdServer *server;
 	GMainLoop *main_loop;
 

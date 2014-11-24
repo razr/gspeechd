@@ -1,4 +1,4 @@
-/* gspeechd-client-context.h
+/* gspeechd-client.h
  *
  * Copyright (C) 2013 Brailcom, o.p.s.
  *
@@ -18,27 +18,27 @@
  * Author: Andrei Kholodnyi <andrei.kholodnyi@gmail.com>
  */
 
-#ifndef GSPEECHD_CLIENT_CONTEXT_H
-#define GSPEECHD_CLIENT_CONTEXT_H
+#ifndef GSPEECHD_CLIENT_H
+#define GSPEECHD_CLIENT_H
 
 #include <glib-object.h>
 #include <gio/gio.h>
 
 G_BEGIN_DECLS
 
-#define GSPEECHD_TYPE_CLIENT_CONTEXT (gspeechd_client_context_get_type())
+#define GSPEECHD_TYPE_CLIENT (gspeechd_client_get_type())
 
-typedef struct _GSpeechdClientContext GSpeechdClientContext;
+typedef struct _GSpeechdClient GSpeechdClient;
 
-GType                  gspeechd_client_context_get_type (void) G_GNUC_CONST;
-GSpeechdClientContext *gspeechd_client_context_ref      (GSpeechdClientContext *context);
-void                   gspeechd_client_context_unref    (GSpeechdClientContext *context);
-GSpeechdClientContext *gspeechd_client_context_new (GSocketConnection    *connection);
-void gspeechd_client_context_dispatch (GSpeechdClientContext *client);
+GType           gspeechd_client_get_type (void) G_GNUC_CONST;
+GSpeechdClient  *gspeechd_client_ref     (GSpeechdClient *client);
+void            gspeechd_client_unref    (GSpeechdClient *client);
+GSpeechdClient  *gspeechd_client_new     (GSocketConnection    *connection);
+void            gspeechd_client_dispatch (GSpeechdClient *client);
 
-void gspeechd_client_context_fail (GSpeechdClientContext *client);
+void            gspeechd_client_fail     (GSpeechdClient *client);
 
 G_END_DECLS
 
-#endif /* GSPEECHD_CLIENT_CONTEXT_H */
+#endif /* GSPEECHD_CLIENT_H */
 

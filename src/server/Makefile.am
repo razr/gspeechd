@@ -3,7 +3,7 @@
 bin_PROGRAMS = gspeechd
 
 gspeechd_SOURCES = gspeechd.c \
-	gspeechd-client-context.c \
+	gspeechd-client.c \
 	gspeechd-server.c \
 	gspeechd-log.c \
 	gspeechd-options.c

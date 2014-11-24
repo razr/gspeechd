@@ -1,4 +1,4 @@
-/* gspeechd-client-context.c
+/* gspeechd-client.c
  *
  * Copyright (C) 2013 Brailcom, o.p.s.
  *
@@ -21,10 +21,10 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 
-#include "gspeechd-client-context.h"
+#include "gspeechd-client.h"
 #include "ssip/ssip.h"
 
-struct _GSpeechdClientContext
+struct _GSpeechdClient
 {
    volatile gint      ref_count;
 
@@ -56,47 +56,47 @@ gspeechd_client_read_line_cb (GInputStream *stream,
                               gpointer user_data);
 
 void
-gspeechd_client_context_dispose (GSpeechdClientContext *context)
+gspeechd_client_dispose (GSpeechdClient *client)
 {
-   g_clear_object (&context->cancellable);
-   g_clear_object (&context->connection);
-   g_clear_object (&context->input);
-   g_clear_object (&context->output);
+   g_clear_object (&client->cancellable);
+   g_clear_object (&client->connection);
+   g_clear_object (&client->input);
+   g_clear_object (&client->output);
 }
 
-GSpeechdClientContext *
-gspeechd_client_context_new (GSocketConnection *connection)
+GSpeechdClient *
+gspeechd_client_new (GSocketConnection *connection)
 {
-	GSpeechdClientContext *context;
+	GSpeechdClient *client;
 	GOutputStream *output_stream;
 	GInputStream *input_stream;
 
-	context = g_slice_new0 (GSpeechdClientContext);
-	context->ref_count = 1;
-	context->cancellable = g_cancellable_new ();
-	context->connection = g_object_ref (connection);
-	context->failed = FALSE;
+	client = g_slice_new0 (GSpeechdClient);
+	client->ref_count = 1;
+	client->cancellable = g_cancellable_new ();
+	client->connection = g_object_ref (connection);
+	client->failed = FALSE;
 
 	/*
 	 * Start listening for the message
 	 */
 	input_stream = g_io_stream_get_input_stream(G_IO_STREAM(connection));
-	context->input = g_data_input_stream_new (input_stream);
+	client->input = g_data_input_stream_new (input_stream);
 
-	g_data_input_stream_read_line_async(context->input,
+	g_data_input_stream_read_line_async(client->input,
 							G_PRIORITY_DEFAULT,
-							context->cancellable,
+							client->cancellable,
 							(GAsyncReadyCallback)gspeechd_client_read_line_cb,
-							gspeechd_client_context_ref (context));
+							gspeechd_client_ref (client));
 
 	output_stream = g_io_stream_get_output_stream (G_IO_STREAM(connection));
-	context->output = g_data_output_stream_new (output_stream);
+	client->output = g_data_output_stream_new (output_stream);
 
-	return (context);
+	return (client);
 }
 
 void
-gspeechd_client_context_fail (GSpeechdClientContext *client)
+gspeechd_client_fail (GSpeechdClient *client)
 {
    g_assert(client);
 
@@ -107,54 +107,54 @@ gspeechd_client_context_fail (GSpeechdClientContext *client)
 }
 
 /**
- * gspeechd_client_context_ref:
- * @context: A #GSpeechdClientContext.
+ * gspeechd_client_ref:
+ * @client: A #GSpeechdClient.
  *
- * Atomically increments the reference count of @context by one.
+ * Automically increments the reference count of @client by one.
  *
- * Returns: (transfer full): A reference to @context.
+ * Returns: (transfer full): A reference to @client.
  */
-GSpeechdClientContext *
-gspeechd_client_context_ref (GSpeechdClientContext *context)
+GSpeechdClient *
+gspeechd_client_ref (GSpeechdClient *client)
 {
-   g_return_val_if_fail(context != NULL, NULL);
-   g_return_val_if_fail(context->ref_count > 0, NULL);
+   g_return_val_if_fail(client != NULL, NULL);
+   g_return_val_if_fail(client->ref_count > 0, NULL);
 
-   g_atomic_int_inc(&context->ref_count);
-   return (context);
+   g_atomic_int_inc(&client->ref_count);
+   return (client);
 }
 
 /**
- * gspeechd_client_context_unref:
- * @context: A GSpeechdClientContext.
+ * gspeechd_client_unref:
+ * @client: A GSpeechdClient.
  *
- * Atomically decrements the reference count of @context by one.  When the
+ * Automically decrements the reference count of @client by one.  When the
  * reference count reaches zero, the structure will be destroyed and
  * freed.
  */
 void
-gspeechd_client_context_unref (GSpeechdClientContext *context)
+gspeechd_client_unref (GSpeechdClient *client)
 {
-   g_return_if_fail (context != NULL);
-   g_return_if_fail (context->ref_count > 0);
+   g_return_if_fail (client != NULL);
+   g_return_if_fail (client->ref_count > 0);
 
-   if (g_atomic_int_dec_and_test (&context->ref_count)) {
-      gspeechd_client_context_dispose (context);
-      g_slice_free (GSpeechdClientContext, context);
+   if (g_atomic_int_dec_and_test (&client->ref_count)) {
+      gspeechd_client_dispose (client);
+      g_slice_free (GSpeechdClient, client);
    }
 }
 
 GType
-gspeechd_client_context_get_type (void)
+gspeechd_client_get_type (void)
 {
    static gsize initialized;
    static GType type_id;
 
    if (g_once_init_enter(&initialized)) {
       type_id = g_boxed_type_register_static (
-            "GSpeechDClientContext",
-            (GBoxedCopyFunc)gspeechd_client_context_ref,
-            (GBoxedFreeFunc)gspeechd_client_context_unref);
+            "GSpeechDClient",
+            (GBoxedCopyFunc)gspeechd_client_ref,
+            (GBoxedFreeFunc)gspeechd_client_unref);
       g_once_init_leave (&initialized, TRUE);
    }
 
@@ -166,7 +166,7 @@ gspeechd_client_read_line_cb (GInputStream *stream,
                        GAsyncResult *res,
                        gpointer user_data)
 {
-	GSpeechdClientContext *context = user_data;
+	GSpeechdClient *client = user_data;
 	char *s;
 	gsize len;
 	GError *error = NULL;

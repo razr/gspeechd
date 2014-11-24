@@ -26,7 +26,6 @@
 G_BEGIN_DECLS
 
 #define GSPEECHD_TYPE_SERVER            (gspeechd_server_get_type())
-#define GSPEECHD_TYPE_CLIENT_CONTEXT    (gspeechd_client_context_get_type())
 #define GSPEECHD_SERVER(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), GSPEECHD_TYPE_SERVER, GSpeechdServer))
 #define GSPEECHD_SERVER_CONST(obj)      (G_TYPE_CHECK_INSTANCE_CAST ((obj), GSPEECHD_TYPE_SERVER, GSpeechdServer const))
 #define GSPEECHD_SERVER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass),  GSPEECHD_TYPE_SERVER, GSpeechdServerClass))
@@ -34,9 +33,9 @@ G_BEGIN_DECLS
 #define GSPEECHD_IS_SERVER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass),  GSPEECHD_TYPE_SERVER))
 #define GSPEECHD_SERVER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj),  GSPEECHD_TYPE_SERVER, GSpeechdServerClass))
 
+typedef struct _GSpeechdServerPrivate GSpeechdServerPrivate;
 typedef struct _GSpeechdServer        GSpeechdServer;
 typedef struct _GSpeechdServerClass   GSpeechdServerClass;
-typedef struct _GSpeechdServerPrivate GSpeechdServerPrivate;
 
 struct _GSpeechdServer
 {

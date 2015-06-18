@@ -167,7 +167,7 @@ gspeechd_client_read_line_cb (GInputStream *stream,
                        gpointer user_data)
 {
 	GSpeechdClient *client = user_data;
-	char *s;
+	gchar *s, *response;
 	gsize len;
 	GError *error = NULL;
 	SsipCommand *cmd;
@@ -182,5 +182,7 @@ gspeechd_client_read_line_cb (GInputStream *stream,
 	g_free(s);
 
 	/* process SSIP command */
+	response = ssip_command_process (cmd);
+
 	/* when QUIT received, send an event connection_closed */
 }

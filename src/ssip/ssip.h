@@ -31,6 +31,7 @@ typedef struct _SsipCommand SsipCommand;
 
 GType        ssip_command_get_type (void) G_GNUC_CONST;
 SsipCommand *ssip_command_new (gchar *line);
+gchar *ssip_command_process (SsipCommand *cmd);
 
 /**
  * SsipCommands:

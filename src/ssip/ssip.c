@@ -28,14 +28,16 @@ struct _SsipCommand
 {
 	volatile gint   ref_count;
 
-	SsipClientId	id;
 	SsipCmd  		cmd;
-	gchar			*param;
+	SsipClientId	id;
+	union {
+        SsipSetParam set_param;
+    } param;
 	gchar			*value;
 };
 
 inline static SsipCmd
-string_to_ssip_cmd (const gchar * cmd)
+parse_cmd (const gchar * cmd, SsipStatus * status)
 {
         GType type;
         GEnumClass *enum_class;
@@ -46,26 +48,59 @@ string_to_ssip_cmd (const gchar * cmd)
         enum_value = g_enum_get_value_by_nick (enum_class, cmd);
 
         if (!enum_value) {
+                *status = ERR_INVALID_COMMAND;
                 return -1;
         }
 
         return enum_value->value;
 }
 
-static SsipStatus
-parse_set (gchar** ps, SsipCommand *cmd)
+inline static SsipClientId
+parse_client_id (gchar * id, SsipStatus * status)
 {
-	return OK_NOT_IMPLEMENTED_DOES_NOTHING;
+        GType type;
+        GEnumClass *enum_class;
+        GEnumValue *enum_value;
+
+        type = ssip_client_id_get_type ();
+        enum_class = G_ENUM_CLASS (g_type_class_peek (type));
+        enum_value = g_enum_get_value_by_nick (enum_class, id);
+
+        if (!enum_value) {
+                *status = ERR_PARAMETER_INVALID;
+                return -1;
+        }
+
+        return enum_value->value;
+}
+
+inline static SsipSetParam
+parse_set (gchar * set_param, SsipStatus * status)
+{
+        GType type;
+        GEnumClass *enum_class;
+        GEnumValue *enum_value;
+
+        type = ssip_set_param_get_type ();
+        enum_class = G_ENUM_CLASS (g_type_class_peek (type));
+        enum_value = g_enum_get_value_by_nick (enum_class, set_param);
+
+        if (!enum_value) {
+                *status = ERR_PARAMETER_INVALID;
+                return -1;
+        }
+
+        return enum_value->value;
 }
 
 static gchar*
-parse_help (gchar** ps)
+ssip_help_process ()
 {
-    char *help;
+    gchar *help;
 
-    help = (char*) g_malloc(1024 * sizeof(char));
+    help = g_malloc(1024 * sizeof(gchar));
 
-    sprintf(help, 
+    g_sprintf(help, 
             "-  SPEAK           -- say text \r\n"
             "-  KEY             -- say a combination of keys \r\n"
             "-  CHAR            -- say a character \r\n"
@@ -91,14 +126,14 @@ ssip_command_new (gchar *line)
 	if (line == NULL)
 		return NULL;
 
-	/* parse command line */
+	/* split command line in 5 parts */
 	ps = g_strsplit (line, " ",  4);
-
 	s = g_ascii_strdown (ps[0], -1);
 
-	cmd = string_to_ssip_cmd (s);
+	cmd = parse_cmd (s, &status);
+	g_free (s);
+	/* TODO: check status instead */
 	if (cmd == -1) {
-		g_free (s);
 		g_strfreev (ps);
 		return NULL;
 	}
@@ -107,19 +142,38 @@ ssip_command_new (gchar *line)
 	ssip_cmd->cmd = cmd;
 	switch (ssip_cmd->cmd) {
 		case SSIP_CMD_SET:
-			status = parse_set (&ps[1], ssip_cmd);
+			s = g_ascii_strdown (ps[1], -1);
+			ssip_cmd->id = parse_client_id (s, &status);
+	        g_free (s);
+
+			s = g_ascii_strdown (ps[2], -1);
+			ssip_cmd->param.set_param = parse_set (s, &status);
+	        g_free (s);
+
+			ssip_cmd->value = g_ascii_strdown (ps[3], -1);
 			break;
 		case SSIP_CMD_HELP:
-			parse_help (NULL);
 			break;
 		default:
 			break;
 	}
 
-	g_free (s);
 	g_strfreev (ps);
 
 	ssip_cmd->ref_count = 1;
 
 	return ssip_cmd; 
+}
+
+gchar *
+ssip_command_process (SsipCommand *ssip_cmd)
+{
+
+	switch (ssip_cmd->cmd) {
+		case SSIP_CMD_SET:
+		case SSIP_CMD_HELP:
+			return ssip_help_process ();
+		default:
+			break;
+	}
 }

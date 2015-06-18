@@ -1,4 +1,4 @@
-/* gspeechd-options.c
+/* gspeechd-options.h
  *
  * Copyright (C) 2013 Brailcom, o.p.s.
  *

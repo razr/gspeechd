@@ -23,6 +23,7 @@
 
 #include "ssip.h"
 #include "ssip-enum-types.h"
+#include "ssip-status-enums.h"
 
 struct _SsipCommand
 {
@@ -140,6 +141,7 @@ ssip_command_new (gchar *line)
 
 	ssip_cmd = g_slice_new0 (SsipCommand);
 	ssip_cmd->cmd = cmd;
+	g_printf ("%d\n",ssip_cmd->cmd);
 	switch (ssip_cmd->cmd) {
 		case SSIP_CMD_SET:
 			s = g_ascii_strdown (ps[1], -1);
@@ -162,18 +164,40 @@ ssip_command_new (gchar *line)
 
 	ssip_cmd->ref_count = 1;
 
-	return ssip_cmd; 
+	return ssip_cmd;
 }
 
-gchar *
-ssip_command_process (SsipCommand *ssip_cmd)
+inline SsipCmd
+ssip_cmd_get (SsipCommand *ssip_cmd)
 {
+    return ssip_cmd->cmd;
+}
 
-	switch (ssip_cmd->cmd) {
-		case SSIP_CMD_SET:
-		case SSIP_CMD_HELP:
-			return ssip_help_process ();
-		default:
-			break;
-	}
+inline SsipSetParam
+ssip_set_param_get (SsipCommand *ssip_cmd)
+{
+    return ssip_cmd->param.set_param;
+}
+
+inline gchar *
+ssip_set_param_value_get (SsipCommand *ssip_cmd)
+{
+    return ssip_cmd->value;
+}
+
+gchar * ssip_response (SsipStatus status)
+{
+        GType type;
+        GEnumClass *enum_class;
+        GEnumValue *enum_value;
+
+        type = ssip_status_get_type ();
+        enum_class = G_ENUM_CLASS (g_type_class_peek (type));
+        enum_value = g_enum_get_value (enum_class, status);
+
+        if (!enum_value) {
+                return NULL;
+        }
+
+        return enum_value->value_name;
 }

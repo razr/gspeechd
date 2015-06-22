@@ -23,6 +23,9 @@
 
 #include <glib-object.h>
 
+#include "ssip-enums.h"
+#include "ssip-status-enums.h"
+
 G_BEGIN_DECLS
 
 #define SSIP_COMMAND (ssip_command_get_type())
@@ -30,8 +33,11 @@ G_BEGIN_DECLS
 typedef struct _SsipCommand SsipCommand;
 
 GType        ssip_command_get_type (void) G_GNUC_CONST;
-SsipCommand *ssip_command_new (gchar *line);
-gchar *ssip_command_process (SsipCommand *cmd);
+SsipCommand * ssip_command_new (gchar *line);
+gchar * ssip_response (SsipStatus status);
+SsipCmd ssip_cmd_get (SsipCommand *cmd);
+SsipSetParam ssip_set_param_get (SsipCommand *cmd);
+gchar * ssip_set_param_value_get (SsipCommand *cmd);
 
 /**
  * SsipCommands:

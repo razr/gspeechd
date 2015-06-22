@@ -71,6 +71,7 @@ gspeechd_server_incoming (GSocketService    *service,
 	client = gspeechd_client_new (connection);
 	g_hash_table_insert (priv->clients, connection, client);
 
+	/* TODO emit signal on client name change */
 	g_signal_emit (server, signals[CLIENT_ADDED], 0);
 
 	return TRUE;

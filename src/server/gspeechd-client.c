@@ -23,18 +23,22 @@
 
 #include "gspeechd-client.h"
 #include "ssip/ssip.h"
+#include "ssip/ssip-enums.h"
+#include "ssip/ssip-status-enums.h"
 
 struct _GSpeechdClient
 {
-   volatile gint      ref_count;
+    volatile gint      ref_count;
 
-   GCancellable      *cancellable;
-   GSocketConnection *connection;
-	GDataInputStream  *input;
-   GDataOutputStream *output;
+    GCancellable      *cancellable;
+    GSocketConnection *connection;
+    GDataInputStream  *input;
+    GDataOutputStream *output;
 
-   guint8            *incoming;
-   gboolean           failed;
+    guint8            *incoming;
+    gboolean           failed;
+
+    gchar *name;
 
 	/* msg settings */
 	/* msg mode: DATA, SSML */
@@ -47,7 +51,9 @@ struct _GSpeechdClient
 	/* output modules: espeak, etc */
 	/* audio module: alsa, pulse, etc */
 	/* log level */
+
 	/* history */
+	 GList *history;
 };
 
 static void
@@ -179,10 +185,30 @@ gspeechd_client_read_line_cb (GInputStream *stream,
 
 	/* parse SSIP command */
 	cmd = ssip_command_new (s);
-	g_free(s);
+	/* TODO remove history */
+	client->history = g_list_append (client->history, s);
 
-	/* process SSIP command */
-	response = ssip_command_process (cmd);
+	/* process command */
+	switch (ssip_cmd_get (cmd)) {
+		case SSIP_CMD_SET:
+			switch (ssip_set_param_get (cmd)) {
+				case SSIP_SET_PARAM_CLIENT_NAME:
+					/* TODO free previous name before */
+					client->name = g_strdup (ssip_set_param_value_get (cmd));
+					/* TODO emit event to the server */
+					response = ssip_response (OK_CLIENT_NAME_SET);
+					g_data_output_stream_put_string (client->output,
+					                                 response,
+					                                 client->cancellable,
+					                                 NULL);
+					break;
+				default:
+					break;
+			}
+		case SSIP_CMD_HELP:
+		default:
+			break;
+	}
 
 	/* when QUIT received, send an event connection_closed */
 }

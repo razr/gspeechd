@@ -45,8 +45,14 @@ parse_cmd (const gchar * cmd, SsipStatus * status)
         GEnumValue *enum_value;
 
         type = ssip_cmd_get_type ();
-        enum_class = G_ENUM_CLASS (g_type_class_peek (type));
+        enum_class = g_type_class_ref (type);
+        if (!enum_class) {
+                *status = ERR_INVALID_COMMAND;
+                return -1;
+        }
+
         enum_value = g_enum_get_value_by_nick (enum_class, cmd);
+        g_type_class_unref (enum_class);
 
         if (!enum_value) {
                 *status = ERR_INVALID_COMMAND;
@@ -64,8 +70,9 @@ parse_client_id (gchar * id, SsipStatus * status)
         GEnumValue *enum_value;
 
         type = ssip_client_id_get_type ();
-        enum_class = G_ENUM_CLASS (g_type_class_peek (type));
+        enum_class = g_type_class_ref (type);
         enum_value = g_enum_get_value_by_nick (enum_class, id);
+        g_type_class_unref (enum_class);
 
         if (!enum_value) {
                 *status = ERR_PARAMETER_INVALID;
@@ -83,8 +90,9 @@ parse_set (gchar * set_param, SsipStatus * status)
         GEnumValue *enum_value;
 
         type = ssip_set_param_get_type ();
-        enum_class = G_ENUM_CLASS (g_type_class_peek (type));
+        enum_class = g_type_class_ref (type);
         enum_value = g_enum_get_value_by_nick (enum_class, set_param);
+        g_type_class_unref (enum_class);
 
         if (!enum_value) {
                 *status = ERR_PARAMETER_INVALID;
@@ -132,6 +140,7 @@ ssip_command_new (gchar *line)
 	s = g_ascii_strdown (ps[0], -1);
 
 	cmd = parse_cmd (s, &status);
+	g_printf ("%s %d\n",s, cmd);
 	g_free (s);
 	/* TODO: check status instead */
 	if (cmd == -1) {
@@ -141,11 +150,12 @@ ssip_command_new (gchar *line)
 
 	ssip_cmd = g_slice_new0 (SsipCommand);
 	ssip_cmd->cmd = cmd;
-	g_printf ("%d\n",ssip_cmd->cmd);
+
 	switch (ssip_cmd->cmd) {
 		case SSIP_CMD_SET:
 			s = g_ascii_strdown (ps[1], -1);
 			ssip_cmd->id = parse_client_id (s, &status);
+			g_printf ("%s %d\n",s, ssip_cmd->id);
 	        g_free (s);
 
 			s = g_ascii_strdown (ps[2], -1);
@@ -185,7 +195,7 @@ ssip_set_param_value_get (SsipCommand *ssip_cmd)
     return ssip_cmd->value;
 }
 
-gchar * ssip_response (SsipStatus status)
+const gchar * ssip_response (SsipStatus status)
 {
         GType type;
         GEnumClass *enum_class;

@@ -201,6 +201,7 @@ gspeechd_client_read_line_cb (GInputStream *stream,
 					                                 response,
 					                                 client->cancellable,
 					                                 NULL);
+					g_printf ("%s\n",response);
 					break;
 				default:
 					break;

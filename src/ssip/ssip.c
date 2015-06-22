@@ -160,9 +160,11 @@ ssip_command_new (gchar *line)
 
 			s = g_ascii_strdown (ps[2], -1);
 			ssip_cmd->param.set_param = parse_set (s, &status);
+			g_printf ("%s %d\n",s, ssip_cmd->param.set_param);
 	        g_free (s);
 
 			ssip_cmd->value = g_ascii_strdown (ps[3], -1);
+			g_printf ("%s\n",s, ssip_cmd->value);
 			break;
 		case SSIP_CMD_HELP:
 			break;
@@ -195,19 +197,20 @@ ssip_set_param_value_get (SsipCommand *ssip_cmd)
     return ssip_cmd->value;
 }
 
-const gchar * ssip_response (SsipStatus status)
+gchar * ssip_response (SsipStatus status)
 {
         GType type;
         GEnumClass *enum_class;
         GEnumValue *enum_value;
 
         type = ssip_status_get_type ();
-        enum_class = G_ENUM_CLASS (g_type_class_peek (type));
+        enum_class = g_type_class_ref (type);
         enum_value = g_enum_get_value (enum_class, status);
+        g_type_class_unref (enum_class);
 
         if (!enum_value) {
                 return NULL;
         }
 
-        return enum_value->value_name;
+        return enum_value->value_nick;
 }

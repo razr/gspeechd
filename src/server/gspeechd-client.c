@@ -175,6 +175,7 @@ gspeechd_client_read_line_cb (GInputStream *stream,
 	GSpeechdClient *client = user_data;
 	gchar *s, *response;
 	gsize len;
+	gboolean ret;
 	GError *error = NULL;
 	SsipCommand *cmd;
 	s = g_data_input_stream_read_line_finish (G_DATA_INPUT_STREAM(stream),
@@ -197,11 +198,11 @@ gspeechd_client_read_line_cb (GInputStream *stream,
 					client->name = g_strdup (ssip_set_param_value_get (cmd));
 					/* TODO emit event to the server */
 					response = ssip_response (OK_CLIENT_NAME_SET);
-					g_data_output_stream_put_string (client->output,
+					ret = g_data_output_stream_put_string (client->output,
 					                                 response,
 					                                 client->cancellable,
 					                                 NULL);
-					g_printf ("%s\n",response);
+					g_printf ("%d %s\n", ret, response);
 					break;
 				default:
 					break;

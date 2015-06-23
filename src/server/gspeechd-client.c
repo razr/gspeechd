@@ -199,7 +199,7 @@ gspeechd_client_read_line_cb (GInputStream *stream,
 					/* TODO emit event to the server */
 					response = ssip_response (OK_CLIENT_NAME_SET);
 					ret = g_data_output_stream_put_string (client->output,
-					                                 response,
+					                                 "280 ok client name set\n",
 					                                 client->cancellable,
 					                                 NULL);
 					g_printf ("%d %s\n", ret, response);
@@ -213,4 +213,10 @@ gspeechd_client_read_line_cb (GInputStream *stream,
 	}
 
 	/* when QUIT received, send an event connection_closed */
+
+	g_data_input_stream_read_line_async(client->input,
+							G_PRIORITY_DEFAULT,
+							client->cancellable,
+							(GAsyncReadyCallback)gspeechd_client_read_line_cb,
+							gspeechd_client_ref (client));
 }

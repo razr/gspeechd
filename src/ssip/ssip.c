@@ -42,7 +42,7 @@ parse_cmd (const gchar * cmd, SsipStatus * status)
 {
         GType type;
         GEnumClass *enum_class;
-        GEnumValue *enum_value;
+        GEnumValue *enum_value = NULL;
 
         type = ssip_cmd_get_type ();
         enum_class = g_type_class_ref (type);
@@ -59,6 +59,7 @@ parse_cmd (const gchar * cmd, SsipStatus * status)
                 return -1;
         }
 
+        *status = OK_RECEIVE_DATA;
         return enum_value->value;
 }
 
@@ -128,19 +129,22 @@ SsipCommand *
 ssip_command_new (gchar *line)
 {
 	SsipCommand *ssip_cmd;
-	gchar **ps, *s;
+	gchar **ps = NULL, *s = NULL;
 	SsipCmd cmd;
 	SsipStatus status;
 
 	if (line == NULL)
 		return NULL;
 
-	/* split command line in 5 parts */
-	ps = g_strsplit (line, " ",  4);
+        /* remove CR and LF */
+        if (line[strlen(line)-1] == '\r') line[strlen(line)-1] = 0;
+        if (line[strlen(line)] == '\n') line[strlen(line)] = 0;
+
+        ps = g_strsplit (line, " ",  -1);
 	s = g_ascii_strdown (ps[0], -1);
 
 	cmd = parse_cmd (s, &status);
-	g_printf ("%s %d\n",s, cmd);
+	g_printf ("%s:%d\n", s, cmd);
 	g_free (s);
 	/* TODO: check status instead */
 	if (cmd == -1) {
@@ -165,6 +169,8 @@ ssip_command_new (gchar *line)
 
 			ssip_cmd->value = g_ascii_strdown (ps[3], -1);
 			g_printf ("%s\n",s, ssip_cmd->value);
+			break;
+		case SSIP_CMD_SPEAK:
 			break;
 		case SSIP_CMD_HELP:
 			break;

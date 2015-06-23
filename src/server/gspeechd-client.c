@@ -168,6 +168,57 @@ gspeechd_client_get_type (void)
 }
 
 static void
+gspeechd_client_read_speak_data_cb (GInputStream *stream,
+                       				GAsyncResult *res,
+                       				gpointer user_data)
+{
+	GSpeechdClient *client = user_data;
+	gchar *s, *response;
+	gsize len;
+	SsipStatus status;
+	gboolean ret;
+	GError *error = NULL;
+
+	s = g_data_input_stream_read_line_finish (G_DATA_INPUT_STREAM(stream),
+	                                          res,
+                                              &len,
+	                                          &error);
+	g_printf ("--->%x:%x:%x\n",s[0], s[1], s[2]);
+
+#define END_SPEAK_DATA_STR ".\xD"
+#define END_SPEAK_DATA_RESPONSE "225-1\r\n"
+	if (g_strcmp0 (s, END_SPEAK_DATA_STR) != 0) {
+		g_data_input_stream_read_line_async(client->input,
+								G_PRIORITY_DEFAULT,
+								client->cancellable,
+								(GAsyncReadyCallback)gspeechd_client_read_speak_data_cb,
+								gspeechd_client_ref (client));
+		return;
+	}
+
+	ret = g_data_output_stream_put_string (client->output,
+	                                       END_SPEAK_DATA_RESPONSE,
+					                       client->cancellable,
+					                       NULL);
+	g_printf ("%d %s\n", ret, END_SPEAK_DATA_RESPONSE);
+
+	status = OK_MESSAGE_QUEUED;
+	response = ssip_response (status);
+	ret = g_data_output_stream_put_string (client->output,
+	                                       response,
+					                       client->cancellable,
+					                       NULL);
+	g_printf ("%d %s\n", ret, response);
+
+	/* parse commands again */
+	g_data_input_stream_read_line_async(client->input,
+							G_PRIORITY_DEFAULT,
+							client->cancellable,
+							(GAsyncReadyCallback)gspeechd_client_read_line_cb,
+							gspeechd_client_ref (client));
+}
+
+static void
 gspeechd_client_read_line_cb (GInputStream *stream,
                        GAsyncResult *res,
                        gpointer user_data)
@@ -178,11 +229,13 @@ gspeechd_client_read_line_cb (GInputStream *stream,
 	gboolean ret;
 	GError *error = NULL;
 	SsipCommand *cmd;
+	SsipStatus status;
+
 	s = g_data_input_stream_read_line_finish (G_DATA_INPUT_STREAM(stream),
 	                                          res,
                                               &len,
 	                                          &error);
-	g_printf ("%s\n",s);
+	g_printf ("-->%s\n",s);
 
 	/* parse SSIP command */
 	cmd = ssip_command_new (s);
@@ -197,20 +250,40 @@ gspeechd_client_read_line_cb (GInputStream *stream,
 					/* TODO free previous name before */
 					client->name = g_strdup (ssip_set_param_value_get (cmd));
 					/* TODO emit event to the server */
-					response = ssip_response (OK_CLIENT_NAME_SET);
-					ret = g_data_output_stream_put_string (client->output,
-					                                 "280 ok client name set\n",
-					                                 client->cancellable,
-					                                 NULL);
-					g_printf ("%d %s\n", ret, response);
+					status = OK_CLIENT_NAME_SET;
+					break;
+				case SSIP_SET_PARAM_PRIORITY:
+					status = OK_PRIORITY_SET;
 					break;
 				default:
 					break;
 			}
+			break;
+		case SSIP_CMD_SPEAK:
+			status = OK_RECEIVE_DATA;
+			response = ssip_response (status);
+			ret = g_data_output_stream_put_string (client->output,
+	        		                               response,
+							                       client->cancellable,
+					        		               NULL);
+			g_printf ("%d %s\n", ret, response);
+			g_data_input_stream_read_line_async(client->input,
+									G_PRIORITY_DEFAULT,
+									client->cancellable,
+									(GAsyncReadyCallback)gspeechd_client_read_speak_data_cb,
+									gspeechd_client_ref (client));
+			return;
 		case SSIP_CMD_HELP:
 		default:
 			break;
 	}
+
+	response = ssip_response (status);
+	ret = g_data_output_stream_put_string (client->output,
+	                                       response,
+					                       client->cancellable,
+					                       NULL);
+	g_printf ("%d %s\n", ret, response);
 
 	/* when QUIT received, send an event connection_closed */
 

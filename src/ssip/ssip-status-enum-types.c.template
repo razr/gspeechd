@@ -22,7 +22,7 @@ GType
 /*** END value-header ***/
 
 /*** BEGIN value-production ***/
-      { @VALUENAME@, "@VALUENAME@", "@valuenum@ @valuenick@" },
+      { @VALUENAME@, "@VALUENAME@", "@valuenum@ @valuenick@\xD\xA" },
 /*** END value-production ***/
 
 /*** BEGIN value-tail ***/

@@ -183,7 +183,7 @@ gspeechd_client_read_speak_data_cb (GInputStream *stream,
 	                                          res,
                                               &len,
 	                                          &error);
-	g_printf ("--->%x:%x:%x\n",s[0], s[1], s[2]);
+	g_printf ("--->%s\n",s);
 
 #define END_SPEAK_DATA_STR ".\xD"
 #define END_SPEAK_DATA_RESPONSE "225-1\r\n"
@@ -231,11 +231,24 @@ gspeechd_client_read_line_cb (GInputStream *stream,
 	SsipCommand *cmd;
 	SsipStatus status;
 
+	/* read lines and removes newline */
 	s = g_data_input_stream_read_line_finish (G_DATA_INPUT_STREAM(stream),
 	                                          res,
                                               &len,
 	                                          &error);
-	g_printf ("-->%s\n",s);
+	if (error != NULL ) {
+		g_printf ("-->%s\n", error->message);
+		g_error_free (error);
+		return;
+	}
+
+	if (s == NULL) {
+		/* client has closed a connection */
+		g_printf ("-->connection closed\n");
+		return; 
+	}
+
+	g_printf ("-->%s\n", s);
 
 	/* parse SSIP command */
 	cmd = ssip_command_new (s);

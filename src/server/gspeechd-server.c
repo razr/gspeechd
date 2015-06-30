@@ -20,6 +20,7 @@
 #include <glib.h>
 #include <gio/gio.h>
 #include <gio/gunixsocketaddress.h>
+#include <glib/gstdio.h>
 
 #include "gspeechd-server.h"
 #include "gspeechd-client.h"

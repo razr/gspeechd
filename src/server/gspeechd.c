@@ -3,10 +3,27 @@
 #endif
 
 #include <gio/gio.h>
+#include <glib-unix.h>
+
+#include <signal.h>
 
 #include "gspeechd-options.h"
 #include "gspeechd-server.h"
 #include "gspeechd-log.h"
+
+static gboolean
+on_interrupt (gpointer user_data)
+{
+	g_print ("%s\n", __FUNCTION__);
+	return G_SOURCE_REMOVE;
+}
+
+static gboolean
+load_configuration (gpointer user_data)
+{
+	g_print ("%s\n", __FUNCTION__);
+	return G_SOURCE_CONTINUE;
+}
 
 int main(int argc, char * argv[])
 {
@@ -27,6 +44,10 @@ int main(int argc, char * argv[])
 
 	g_print ("speechd started in %s mode\n", 
 		(options->method == GSPEECHD_UNIX_SOCKET)?"unix_socket":"inet_socket");
+
+	g_unix_signal_add(SIGINT, on_interrupt, NULL);
+	g_unix_signal_add(SIGHUP, load_configuration, NULL);
+	signal (SIGPIPE, SIG_IGN);
 
 	main_loop = g_main_loop_new (NULL, FALSE);
 	g_main_loop_run (main_loop);

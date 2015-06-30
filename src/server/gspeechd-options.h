@@ -25,7 +25,13 @@
 
 G_BEGIN_DECLS
 
+typedef enum {
+	GSPEECHD_INET_SOCKET,
+	GSPEECHD_UNIX_SOCKET
+} gspeechd_com_method;
+
 typedef struct _gspeechd_options {
+	gspeechd_com_method method;
 	gint	port;
 	gint	log_level;
 	gchar  *log_dir;

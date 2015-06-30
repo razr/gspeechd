@@ -28,13 +28,25 @@
 
 static gspeechd_options cmd_options = 
 {
+	.method = GSPEECHD_UNIX_SOCKET,
 	.port = GSPEECHD_DEFAULT_PORT,
 	.log_level = GSPEECHD_DEFAULT_LOG_LEVEL,
 	.log_dir = GSPEECHD_DEFAULT_LOG_DIR
 };
 
+static gboolean
+parse_com_method_cb (const gchar *option_name, const gchar *value,
+		 gpointer data, GError **error)
+{
+	if (g_strcmp0 ("inet_socket", value)) {
+		cmd_options.method = GSPEECHD_INET_SOCKET;
+	}
+	return TRUE;
+}
+
 static GOptionEntry options[] =
 {
+	{ "communication-method", 'c', 0, G_OPTION_ARG_CALLBACK, parse_com_method_cb, "Communication method to use ('unix_socket' or 'inet_socket')", NULL },
 	{ "port", 		'p', 0, G_OPTION_ARG_INT, &cmd_options.port, "Local port to bind to", NULL },
 	{ "log-level",  'l', 0, G_OPTION_ARG_INT, &cmd_options.log_level, "Set log level (1...5)", NULL },
 	{ "log-dir",	'L', 0, G_OPTION_ARG_STRING, &cmd_options.log_dir, "Set path to logging", NULL },

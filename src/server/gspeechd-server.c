@@ -46,9 +46,6 @@ gspeechd_server_new (gspeechd_com_method method)
 {
 	GError *error = NULL;
 	const gspeechd_options *options;
-	GSocket *socket;
-	GSocketAddress *address;
-	gchar *path;
 
 	GSpeechdServer *server = g_object_new (GSPEECHD_TYPE_SERVER, NULL);
 
@@ -58,6 +55,10 @@ gspeechd_server_new (gspeechd_com_method method)
 		g_print ("server is listening on port %d\n", options->port);
 	}
 	else {
+		GSocket *socket;
+		GSocketAddress *address;
+		gchar *path;
+
 		socket = g_socket_new (G_SOCKET_FAMILY_UNIX, G_SOCKET_TYPE_STREAM,
 							   G_SOCKET_PROTOCOL_DEFAULT, &error);
  		if (!socket)
@@ -78,6 +79,10 @@ gspeechd_server_new (gspeechd_com_method method)
 		g_socket_listener_add_socket (G_SOCKET_LISTENER (server), socket, NULL, &error);
 		g_print ("server is listening on socket %s\n", path);
 		g_free (path);
+    	if (socket)
+        	g_object_unref (socket);
+    	if (address)
+        	g_object_unref (address);
 	}
 
 	return server;

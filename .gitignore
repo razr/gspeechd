@@ -29,7 +29,9 @@ Makefile
 *.la
 *.lo
 .deps
+.libs
 
+gspeechd
 src/ssip/ssip-enum-types.c
 src/ssip/ssip-enum-types.h
 src/ssip/ssip-status-enum-types.c

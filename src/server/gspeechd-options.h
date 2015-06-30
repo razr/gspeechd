@@ -26,8 +26,8 @@
 G_BEGIN_DECLS
 
 typedef enum {
-	GSPEECHD_INET_SOCKET,
-	GSPEECHD_UNIX_SOCKET
+	GSPEECHD_UNIX_SOCKET,
+	GSPEECHD_INET_SOCKET
 } gspeechd_com_method;
 
 typedef struct _gspeechd_options {
@@ -37,8 +37,9 @@ typedef struct _gspeechd_options {
 	gchar  *log_dir;
 } gspeechd_options;
 
+gboolean gspeechd_options_parse (int argc, char * argv[]);
 const gspeechd_options * 
-gspeechd_options_get (int argc, char * argv[]);
+gspeechd_options_get (void);
 
 G_END_DECLS
 

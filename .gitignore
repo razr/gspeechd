@@ -17,6 +17,7 @@ Makefile.in
 Makefile
 /libtool
 /ltmain.sh
+/m4
 
 # Byte-compiled / optimized / DLL files
  __pycache__/

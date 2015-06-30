@@ -38,7 +38,7 @@ static gboolean
 parse_com_method_cb (const gchar *option_name, const gchar *value,
 		 gpointer data, GError **error)
 {
-	if (g_strcmp0 ("inet_socket", value)) {
+	if (g_strcmp0 ("inet_socket", value) == 0) {
 		cmd_options.method = GSPEECHD_INET_SOCKET;
 	}
 	return TRUE;
@@ -53,7 +53,7 @@ static GOptionEntry options[] =
 	{ NULL }
 };
 
-const gspeechd_options * gspeechd_options_get (int argc, char * argv[])
+gboolean gspeechd_options_parse (int argc, char * argv[])
 {
 	GOptionContext *context;
 	GError *error = NULL;
@@ -67,6 +67,11 @@ const gspeechd_options * gspeechd_options_get (int argc, char * argv[])
 	retval = g_option_context_parse (context, &argc, &argv, &error);
 	g_option_context_free (context);
 
+	return retval;
+}
+
+const gspeechd_options * gspeechd_options_get (void)
+{
 	return (&cmd_options);
 }
 

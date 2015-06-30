@@ -18,9 +18,12 @@
  * Author: Andrei Kholodnyi <andrei.kholodnyi@gmail.com>
  */
 #include <glib.h>
+#include <gio/gio.h>
+#include <gio/gunixsocketaddress.h>
 
 #include "gspeechd-server.h"
 #include "gspeechd-client.h"
+#include "gspeechd-options.h"
 
 G_DEFINE_TYPE(GSpeechdServer, gspeechd_server, G_TYPE_SOCKET_SERVICE)
 
@@ -39,13 +42,44 @@ enum
 static guint signals[LAST_SIGNAL];
 
 GSpeechdServer *
-gspeechd_server_new (int port)
+gspeechd_server_new (gspeechd_com_method method)
 {
 	GError *error = NULL;
+	const gspeechd_options *options;
+	GSocket *socket;
+	GSocketAddress *address;
+	gchar *path;
 
 	GSpeechdServer *server = g_object_new (GSPEECHD_TYPE_SERVER, NULL);
 
-	g_socket_listener_add_inet_port (G_SOCKET_LISTENER (server), port, NULL, &error);
+	options = gspeechd_options_get ();
+	if (method == GSPEECHD_INET_SOCKET) {
+		g_socket_listener_add_inet_port (G_SOCKET_LISTENER (server), options->port, NULL, &error);
+		g_print ("server is listening on port %d\n", options->port);
+	}
+	else {
+		socket = g_socket_new (G_SOCKET_FAMILY_UNIX, G_SOCKET_TYPE_STREAM,
+							   G_SOCKET_PROTOCOL_DEFAULT, &error);
+ 		if (!socket)
+        	g_error ("Cannot create socket: %s", error->message);
+
+		path = g_strdup_printf("%s/speech-dispatcher/speechd.sock", g_get_user_runtime_dir());
+		if (g_file_test(path, G_FILE_TEST_EXISTS)) {
+			g_unlink(path);
+		}
+		address = g_unix_socket_address_new (path);
+
+	    if (!g_socket_bind (socket, address, TRUE, &error))
+    	    g_error ("Cannot bind socket: %s", error->message);
+
+	    if (!g_socket_listen (socket, &error))
+    	    g_error ("Cannot listen in socket: %s", error->message);
+
+		g_socket_listener_add_socket (G_SOCKET_LISTENER (server), socket, NULL, &error);
+		g_print ("server is listening on socket %s\n", path);
+		g_free (path);
+	}
+
 	return server;
 }
 

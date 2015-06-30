@@ -6,6 +6,8 @@ AC_INIT([gspeechd], [0.1], [razr@github.com])
 AM_INIT_AUTOMAKE([foreign])
 LT_INIT([dlopen])
 
+AC_CONFIG_MACRO_DIR([m4])
+
 AC_CONFIG_SRCDIR([src/server/gspeechd.c])
 AC_CONFIG_HEADERS([config.h])
 
@@ -32,6 +34,10 @@ AC_SUBST([GMODULE_LIBS])
 PKG_CHECK_MODULES([GIO], [gio-2.0])
 AC_SUBST(GIO_CFLAGS)
 AC_SUBST(GIO_LIBS)
+
+PKG_CHECK_MODULES([GIO_UNIX], [gio-unix-2.0])
+AC_SUBST(GIO_UNIX_CFLAGS)
+AC_SUBST(GIO_UNIX_LIBS)
 
 # Checks for header files.
 

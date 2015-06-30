@@ -22,6 +22,7 @@
 #define GSPEECHD_SERVER_H
 
 #include <gio/gio.h>
+#include "gspeechd-options.h"
 
 G_BEGIN_DECLS
 
@@ -57,7 +58,7 @@ struct _GSpeechdServerClass
 };
 
 GType    	    gspeechd_server_get_type         (void) G_GNUC_CONST;
-GSpeechdServer *gspeechd_server_new              (int				max_threads);
+GSpeechdServer *gspeechd_server_new              (gspeechd_com_method method);
 
 G_END_DECLS
 

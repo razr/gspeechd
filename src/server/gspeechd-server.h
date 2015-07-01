@@ -27,35 +27,8 @@
 G_BEGIN_DECLS
 
 #define GSPEECHD_TYPE_SERVER            (gspeechd_server_get_type())
-#define GSPEECHD_SERVER(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), GSPEECHD_TYPE_SERVER, GSpeechdServer))
-#define GSPEECHD_SERVER_CONST(obj)      (G_TYPE_CHECK_INSTANCE_CAST ((obj), GSPEECHD_TYPE_SERVER, GSpeechdServer const))
-#define GSPEECHD_SERVER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass),  GSPEECHD_TYPE_SERVER, GSpeechdServerClass))
-#define GSPEECHD_IS_SERVER(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GSPEECHD_TYPE_SERVER))
-#define GSPEECHD_IS_SERVER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass),  GSPEECHD_TYPE_SERVER))
-#define GSPEECHD_SERVER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj),  GSPEECHD_TYPE_SERVER, GSpeechdServerClass))
 
-typedef struct _GSpeechdServerPrivate GSpeechdServerPrivate;
 typedef struct _GSpeechdServer        GSpeechdServer;
-typedef struct _GSpeechdServerClass   GSpeechdServerClass;
-
-struct _GSpeechdServer
-{
-   GThreadedSocketService parent;
-
-   /*< private >*/
-   GSpeechdServerPrivate *priv;
-};
-
-struct _GSpeechdServerClass
-{
-   GThreadedSocketServiceClass parent_class;
-
-	/* signals */
-	void (* client_added)   (GSpeechdServer *server,
-	                         const gchar    *client_name);
-	void (* client_removed) (GSpeechdServer *server,
-	                         const gchar    *client_name);
-};
 
 GType    	    gspeechd_server_get_type         (void) G_GNUC_CONST;
 GSpeechdServer *gspeechd_server_new              (gspeechd_com_method method);

@@ -30,9 +30,18 @@ typedef enum {
 	GSPEECHD_INET_SOCKET
 } gspeechd_com_method;
 
+/* Mode of speechd execution */
+typedef enum {
+	GSPEECHD_MODE_DAEMON,
+	GSPEECHD_MODE_SINGLE
+} gspeechd_mode;
+
 typedef struct _gspeechd_options {
+	gspeechd_mode mode;
 	gspeechd_com_method method;
 	gint	port;
+	gchar  *socket_file;
+	gchar  *pid_file;
 	gint	log_level;
 	gchar  *log_dir;
 } gspeechd_options;

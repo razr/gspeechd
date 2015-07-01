@@ -58,18 +58,16 @@ gspeechd_server_new (gspeechd_com_method method)
 	else {
 		GSocket *socket;
 		GSocketAddress *address;
-		gchar *path;
 
 		socket = g_socket_new (G_SOCKET_FAMILY_UNIX, G_SOCKET_TYPE_STREAM,
 							   G_SOCKET_PROTOCOL_DEFAULT, &error);
  		if (!socket)
         	g_error ("Cannot create socket: %s", error->message);
 
-		path = g_strdup_printf("%s/speech-dispatcher/speechd.sock", g_get_user_runtime_dir());
-		if (g_file_test(path, G_FILE_TEST_EXISTS)) {
-			g_unlink(path);
+		if (g_file_test (options->socket_file, G_FILE_TEST_EXISTS)) {
+			g_unlink (options->socket_file);
 		}
-		address = g_unix_socket_address_new (path);
+		address = g_unix_socket_address_new (options->socket_file);
 
 	    if (!g_socket_bind (socket, address, TRUE, &error))
     	    g_error ("Cannot bind socket: %s", error->message);
@@ -78,8 +76,8 @@ gspeechd_server_new (gspeechd_com_method method)
     	    g_error ("Cannot listen in socket: %s", error->message);
 
 		g_socket_listener_add_socket (G_SOCKET_LISTENER (server), socket, NULL, &error);
-		g_print ("server is listening on socket %s\n", path);
-		g_free (path);
+		g_print ("server is listening on socket %s\n", options->socket_file);
+
     	if (socket)
         	g_object_unref (socket);
     	if (address)

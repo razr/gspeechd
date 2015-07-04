@@ -51,7 +51,7 @@ parse_com_method_cb (const gchar *option_name, const gchar *value,
 		 gpointer data, GError **error)
 {
 	if (g_strcmp0 ("inet_socket", value) == 0) {
-		GParameter *param = g_new0 (GParameter, 1);
+		GParameter *param = g_slice_new0 (GParameter);
 
 		param->name = g_strdup ("communication-method");
 		g_value_init (&param->value, GSPEECHD_SERVER_TYPE_COM_METHOD);
@@ -66,7 +66,7 @@ static gboolean
 parse_port_cb (const gchar *option_name, const gchar *value,
 		 gpointer data, GError **error)
 {
-	GParameter *param = g_new0 (GParameter, 1);
+	GParameter *param = g_slice_new0 (GParameter);
 
 	param->name = g_strdup ("port");
 	g_value_init (&param->value, G_TYPE_UINT);
@@ -80,7 +80,7 @@ static gboolean
 parse_socket_file_cb (const gchar *option_name, const gchar *value,
 		 gpointer data, GError **error)
 {
-	GParameter *param = g_new0 (GParameter, 1);
+	GParameter *param = g_slice_new0 (GParameter);
 
 	param->name = g_strdup ("socket-file");
 	g_value_init (&param->value, G_TYPE_STRING);

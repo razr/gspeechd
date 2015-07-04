@@ -250,15 +250,16 @@ gspeechd_server_incoming (GSocketService    *service,
 static void
 gspeechd_server_finalize (GObject *object)
 {
-   GSpeechdServerPrivate *priv;
+    GSpeechdServerPrivate *priv;
 
-   priv = GSPEECHD_SERVER(object)->priv;
+    priv = GSPEECHD_SERVER(object)->priv;
 
-   g_hash_table_unref(priv->clients);
+    g_hash_table_unref(priv->clients);
+    g_free (priv->socket_file);
 
-   G_OBJECT_CLASS(gspeechd_server_parent_class)->finalize(object);
+    G_OBJECT_CLASS(gspeechd_server_parent_class)->finalize(object);
 
-   return;
+    return;
 }
 
 static void

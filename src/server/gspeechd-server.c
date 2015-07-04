@@ -1,6 +1,6 @@
 /* gspeechd-server.c
  *
- * Copyright (C) 2013 Brailcom, o.p.s.
+ * Copyright (C) 2015 Brailcom, o.p.s.
  *
  * This file is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,6 +17,11 @@
  * 
  * Author: Andrei Kholodnyi <andrei.kholodnyi@gmail.com>
  */
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <glib.h>
 #include <gio/gio.h>
 #include <gio/gunixsocketaddress.h>
@@ -24,7 +29,10 @@
 
 #include "gspeechd-server.h"
 #include "gspeechd-client.h"
-#include "gspeechd-options.h"
+
+#define GSPEECHD_SERVER_DEFAULT_COM_METHOD GSPEECHD_SERVER_UNIX_SOCKET
+#define GSPEECHD_SERVER_DEFAULT_PORT 6560
+#define GSPEECHD_SERVER_DEFAULT_SOCKET_FILE "default"
 
 #define GSPEECHD_SERVER(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), GSPEECHD_TYPE_SERVER, GSpeechdServer))
 #define GSPEECHD_SERVER_CONST(obj)      (G_TYPE_CHECK_INSTANCE_CAST ((obj), GSPEECHD_TYPE_SERVER, GSpeechdServer const))
@@ -59,6 +67,10 @@ G_DEFINE_TYPE(GSpeechdServer, gspeechd_server, G_TYPE_SOCKET_SERVICE)
 
 struct _GSpeechdServerPrivate
 {
+   gspeechd_server_com_method method;
+   guint16 port;
+   gchar *socket_file;
+
    GHashTable *clients;
 };
 
@@ -68,21 +80,114 @@ enum
    CLIENT_REMOVED,
    LAST_SIGNAL
 };
-
 static guint signals[LAST_SIGNAL];
 
+enum
+{
+  PROP_0,
+
+  PROP_COMMUNICATION_METHOD,
+  PROP_PORT,
+  PROP_SOCKET_FILE,
+
+  N_PROPERTIES
+};
+static GParamSpec *obj_properties[N_PROPERTIES] = { NULL, };
+
+GType
+gspeechd_server_com_method_get_type (void)
+{
+  static GType server_com_method_type = 0;
+
+  if (!server_com_method_type) {
+    static GEnumValue com_types[] = {
+      { GSPEECHD_SERVER_UNIX_SOCKET, "UNIX Socket", "unix-socket" },
+      { GSPEECHD_SERVER_INET_SOCKET, "INET Socket", "inet-socket"  },
+      { 0, NULL, NULL },
+    };
+
+    server_com_method_type =
+	g_enum_register_static ("GspeechdServerComMethod",
+				com_types);
+  }
+
+  return server_com_method_type;
+}
+
+static void
+gspeechd_get_property (GObject    *object,
+                       guint       property_id,
+                       GValue     *value,
+                       GParamSpec *pspec)
+{
+  GSpeechdServer *self = GSPEECHD_SERVER (object);
+
+  switch (property_id)
+    {
+    case PROP_COMMUNICATION_METHOD:
+      g_value_set_enum (value, self->priv->method);
+      break;
+
+    case PROP_PORT:
+      g_value_set_int (value, self->priv->port);
+      break;
+
+    case PROP_SOCKET_FILE:
+      g_value_set_string (value, self->priv->socket_file);
+      break;
+
+    default:
+      /* We don't have any other property... */
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      break;
+    }
+}
+
+static void
+gspeechd_set_property (GObject      *object,
+                       guint         property_id,
+                       const GValue *value,
+                       GParamSpec   *pspec)
+{
+  GSpeechdServer *self = GSPEECHD_SERVER (object);
+
+  switch (property_id)
+    {
+    case PROP_COMMUNICATION_METHOD:
+      self->priv->method = g_value_get_enum (value);
+      break;
+
+    case PROP_PORT:
+      self->priv->port = g_value_get_int (value);
+      break;
+
+    case PROP_SOCKET_FILE:
+      g_free (self->priv->socket_file);
+      self->priv->socket_file = g_value_dup_string (value);
+      break;
+
+    default:
+      /* We don't have any other property... */
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      break;
+    }
+}
+
 GSpeechdServer *
-gspeechd_server_new (gspeechd_com_method method)
+gspeechd_server_new (guint n_parameters, GParameter *parameters)
 {
 	GError *error = NULL;
-	const gspeechd_options *options;
 
-	GSpeechdServer *server = g_object_new (GSPEECHD_TYPE_SERVER, NULL);
+	GSpeechdServer *server = g_object_newv (GSPEECHD_TYPE_SERVER, n_parameters, parameters);
 
-	options = gspeechd_options_get ();
-	if (method == GSPEECHD_INET_SOCKET) {
-		g_socket_listener_add_inet_port (G_SOCKET_LISTENER (server), options->port, NULL, &error);
-		g_print ("server is listening on port %d\n", options->port);
+	if (g_strcmp0 (GSPEECHD_SERVER_DEFAULT_SOCKET_FILE, server->priv->socket_file) == 0) {
+	    g_free (server->priv->socket_file);
+		server->priv->socket_file = g_build_filename (g_get_user_runtime_dir(), "speech-dispatcher", "speechd.sock", NULL);
+	}
+
+	if (server->priv->method == GSPEECHD_SERVER_INET_SOCKET) {
+		g_socket_listener_add_inet_port (G_SOCKET_LISTENER (server), server->priv->port, NULL, &error);
+		g_print ("server is listening on port %d\n", server->priv->port);
 	}
 	else {
 		GSocket *socket;
@@ -93,10 +198,10 @@ gspeechd_server_new (gspeechd_com_method method)
  		if (!socket)
         	g_error ("Cannot create socket: %s", error->message);
 
-		if (g_file_test (options->socket_file, G_FILE_TEST_EXISTS)) {
-			g_unlink (options->socket_file);
+		if (g_file_test (server->priv->socket_file, G_FILE_TEST_EXISTS)) {
+			g_unlink (server->priv->socket_file);
 		}
-		address = g_unix_socket_address_new (options->socket_file);
+		address = g_unix_socket_address_new (server->priv->socket_file);
 
 	    if (!g_socket_bind (socket, address, TRUE, &error))
     	    g_error ("Cannot bind socket: %s", error->message);
@@ -105,7 +210,7 @@ gspeechd_server_new (gspeechd_com_method method)
     	    g_error ("Cannot listen in socket: %s", error->message);
 
 		g_socket_listener_add_socket (G_SOCKET_LISTENER (server), socket, NULL, &error);
-		g_print ("server is listening on socket %s\n", options->socket_file);
+		g_print ("server is listening on socket %s\n", server->priv->socket_file);
 
     	if (socket)
         	g_object_unref (socket);
@@ -132,9 +237,7 @@ gspeechd_server_incoming (GSocketService    *service,
 
 	priv = server->priv;
 
-	/*
-	 * Store the client for tracking things
-	 */
+	/* Store the client for tracking things */
 	client = gspeechd_client_new (connection);
 	g_hash_table_insert (priv->clients, connection, client);
 
@@ -161,11 +264,42 @@ gspeechd_server_finalize (GObject *object)
 static void
 gspeechd_server_class_init (GSpeechdServerClass *klass)
 {
-   GObjectClass *object_class;
-   GSocketServiceClass *service_class;
+	GObjectClass *object_class;
+	GSocketServiceClass *service_class;
 
-   object_class = G_OBJECT_CLASS(klass);
-   object_class->finalize = gspeechd_server_finalize;
+	object_class = G_OBJECT_CLASS(klass);
+	object_class->finalize = gspeechd_server_finalize;
+
+	object_class->set_property = gspeechd_set_property;
+	object_class->get_property = gspeechd_get_property;
+
+	obj_properties[PROP_COMMUNICATION_METHOD] =
+	g_param_spec_enum ("communication-method",
+                       "communication method property",
+                       "get/set server communication method",
+                       GSPEECHD_SERVER_TYPE_COM_METHOD,
+                       GSPEECHD_SERVER_DEFAULT_COM_METHOD,
+                       G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
+
+	obj_properties[PROP_PORT] =
+    g_param_spec_int ("port",
+                      "communication port number property",
+                      "get/set communication port method",
+                      1024  /* minimum value */,
+                      65535 /* maximum value */,
+                      GSPEECHD_SERVER_DEFAULT_PORT,
+                      G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
+
+	obj_properties[PROP_SOCKET_FILE] =
+	g_param_spec_string ("socket-file",
+                         "socket file property",
+                         "socket file for the UNIX socket",
+                         GSPEECHD_SERVER_DEFAULT_SOCKET_FILE,
+                         G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
+
+	g_object_class_install_properties (object_class,
+                                       N_PROPERTIES,
+                                       obj_properties);
 
 	signals [CLIENT_ADDED] =
 		g_signal_new ("client-added",
@@ -187,11 +321,10 @@ gspeechd_server_class_init (GSpeechdServerClass *klass)
 		              G_TYPE_NONE, 1,
 		              G_TYPE_STRING);
 
-   g_type_class_add_private(object_class, sizeof(GSpeechdServerPrivate));
+	g_type_class_add_private(object_class, sizeof(GSpeechdServerPrivate));
 
-   service_class = G_SOCKET_SERVICE_CLASS(klass);
-   service_class->incoming = gspeechd_server_incoming;
-
+	service_class = G_SOCKET_SERVICE_CLASS(klass);
+	service_class->incoming = gspeechd_server_incoming;
 }
 
 static void

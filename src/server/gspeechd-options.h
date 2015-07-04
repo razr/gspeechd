@@ -1,6 +1,6 @@
 /* gspeechd-options.h
  *
- * Copyright (C) 2013 Brailcom, o.p.s.
+ * Copyright (C) 2015 Brailcom, o.p.s.
  *
  * This file is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,11 +25,6 @@
 
 G_BEGIN_DECLS
 
-typedef enum {
-	GSPEECHD_UNIX_SOCKET,
-	GSPEECHD_INET_SOCKET
-} gspeechd_com_method;
-
 /* Mode of speechd execution */
 typedef enum {
 	GSPEECHD_MODE_DAEMON,
@@ -38,17 +33,14 @@ typedef enum {
 
 typedef struct _gspeechd_options {
 	gspeechd_mode mode;
-	gspeechd_com_method method;
-	gint	port;
-	gchar  *socket_file;
 	gchar  *pid_file;
 	gint	log_level;
 	gchar  *log_dir;
 } gspeechd_options;
 
 gboolean gspeechd_options_parse (int argc, char * argv[]);
-const gspeechd_options * 
-gspeechd_options_get (void);
+const gspeechd_options * gspeechd_options_get (void);
+GArray * gspeechd_options_server_get (void);
 
 G_END_DECLS
 

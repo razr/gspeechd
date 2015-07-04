@@ -1,3 +1,23 @@
+/* gspeechd.c
+ *
+ * Copyright (C) 2015 Brailcom, o.p.s.
+ *
+ * This file is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This file is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * Author: Andrei Kholodnyi <andrei.kholodnyi@gmail.com>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -5,6 +25,7 @@
 #include <gio/gio.h>
 #include <glib-unix.h>
 #include <glib/gstdio.h>
+#include <glib-object.h>
 
 #include <signal.h>
 #include <unistd.h>
@@ -62,6 +83,8 @@ pid_file_create (gchar *pidfile_name)
 	}
 
 	/* Create a new pid file and lock it */
+	g_mkdir_with_parents (g_path_get_dirname(pidfile_name), S_IRWXU);
+
 	pid_file = g_fopen (pidfile_name, "w");
 	if (pid_file == NULL) {
 		g_critical ("Can't create pid file in %s, wrong permissions?\n", pidfile_name);
@@ -106,6 +129,7 @@ int main(int argc, char * argv[])
 	GSpeechdServer *server;
 	GMainLoop *main_loop;
 	gboolean parsed;
+	GArray *server_parameters;
 
 	parsed = gspeechd_options_parse (argc, argv);
 	options = gspeechd_options_get ();
@@ -125,10 +149,8 @@ int main(int argc, char * argv[])
 		}
 	}
 
-	server = gspeechd_server_new (options->method);
-
-	g_print ("speechd started in %s mode\n", 
-		(options->method == GSPEECHD_UNIX_SOCKET)?"unix_socket":"inet_socket");
+	server_parameters = gspeechd_options_server_get ();
+	server = gspeechd_server_new (server_parameters->len, (GParameter *) server_parameters->data);
 
 	g_unix_signal_add(SIGINT, on_interrupt, NULL);
 	g_unix_signal_add(SIGHUP, load_configuration, NULL);

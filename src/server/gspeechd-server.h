@@ -1,6 +1,6 @@
 /* gspeechd-server.h
  *
- * Copyright (C) 2013 Brailcom, o.p.s.
+ * Copyright (C) 2015 Brailcom, o.p.s.
  *
  * This file is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,16 +22,23 @@
 #define GSPEECHD_SERVER_H
 
 #include <gio/gio.h>
-#include "gspeechd-options.h"
 
 G_BEGIN_DECLS
 
 #define GSPEECHD_TYPE_SERVER            (gspeechd_server_get_type())
+#define GSPEECHD_SERVER_TYPE_COM_METHOD (gspeechd_server_com_method_get_type ())
 
 typedef struct _GSpeechdServer        GSpeechdServer;
 
-GType    	    gspeechd_server_get_type         (void) G_GNUC_CONST;
-GSpeechdServer *gspeechd_server_new              (gspeechd_com_method method);
+typedef enum {
+	GSPEECHD_SERVER_UNIX_SOCKET,
+	GSPEECHD_SERVER_INET_SOCKET
+} gspeechd_server_com_method;
+
+GType gspeechd_server_get_type (void) G_GNUC_CONST;
+GType gspeechd_server_com_method_get_type (void) G_GNUC_CONST;
+GSpeechdServer *gspeechd_server_new              (guint n_parameters,
+               									  GParameter *parameters);
 
 G_END_DECLS
 

@@ -151,7 +151,13 @@ int main(int argc, char * argv[])
 
 	server_parameters = gspeechd_options_server_get ();
 	server = gspeechd_server_new (server_parameters->len, (GParameter *) server_parameters->data);
-
+	if (server == NULL) {
+		exit (1);
+	}
+	if (!gspeechd_server_start (server)) {
+		exit (1);
+	}
+	
 	g_unix_signal_add(SIGINT, on_interrupt, NULL);
 	g_unix_signal_add(SIGHUP, load_configuration, NULL);
 	signal (SIGPIPE, SIG_IGN);

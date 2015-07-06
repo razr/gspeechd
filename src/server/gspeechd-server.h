@@ -40,6 +40,8 @@ GType gspeechd_server_com_method_get_type (void) G_GNUC_CONST;
 GSpeechdServer *gspeechd_server_new              (guint n_parameters,
                									  GParameter *parameters);
 
+gboolean gspeechd_server_start              (GSpeechdServer *server);
+
 G_END_DECLS
 
 #endif /* GSPEECHD_SERVER_H */

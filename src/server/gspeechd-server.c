@@ -176,8 +176,6 @@ gspeechd_set_property (GObject      *object,
 GSpeechdServer *
 gspeechd_server_new (guint n_parameters, GParameter *parameters)
 {
-	GError *error = NULL;
-
 	GSpeechdServer *server = g_object_newv (GSPEECHD_TYPE_SERVER, n_parameters, parameters);
 
 	if (g_strcmp0 (GSPEECHD_SERVER_DEFAULT_SOCKET_FILE, server->priv->socket_file) == 0) {
@@ -185,9 +183,20 @@ gspeechd_server_new (guint n_parameters, GParameter *parameters)
 		server->priv->socket_file = g_build_filename (g_get_user_runtime_dir(), "speech-dispatcher", "speechd.sock", NULL);
 	}
 
+	return server;
+}
+
+gboolean
+gspeechd_server_start (GSpeechdServer *server)
+{
+	GError *error = NULL;
+
+	g_return_val_if_fail (GSPEECHD_IS_SERVER (server), FALSE);
+
 	if (server->priv->method == GSPEECHD_SERVER_INET_SOCKET) {
 		if (!g_socket_listener_add_inet_port (G_SOCKET_LISTENER (server), server->priv->port, NULL, &error)) {
 		    g_error ("Cannot add listener on port %d: %s", server->priv->port, error->message);
+            return FALSE;
 		}
 		g_message ("server is listening on port %d\n", server->priv->port);
 	}
@@ -197,21 +206,30 @@ gspeechd_server_new (guint n_parameters, GParameter *parameters)
 
 		socket = g_socket_new (G_SOCKET_FAMILY_UNIX, G_SOCKET_TYPE_STREAM,
 							   G_SOCKET_PROTOCOL_DEFAULT, &error);
- 		if (!socket)
+ 		if (!socket) {
         	g_error ("Cannot create socket: %s", error->message);
+        	return FALSE;
+ 		}
 
 		if (g_file_test (server->priv->socket_file, G_FILE_TEST_EXISTS)) {
 			g_unlink (server->priv->socket_file);
 		}
 		address = g_unix_socket_address_new (server->priv->socket_file);
 
-	    if (!g_socket_bind (socket, address, TRUE, &error))
+	    if (!g_socket_bind (socket, address, TRUE, &error)) {
     	    g_error ("Cannot bind socket: %s", error->message);
+            return FALSE;
+	    }
 
-	    if (!g_socket_listen (socket, &error))
+	    if (!g_socket_listen (socket, &error)) {
     	    g_error ("Cannot listen in socket: %s", error->message);
+            return FALSE;
+    	}
 
-		g_socket_listener_add_socket (G_SOCKET_LISTENER (server), socket, NULL, &error);
+        if (!g_socket_listener_add_socket (G_SOCKET_LISTENER (server), socket, NULL, &error)) {
+		    g_error ("Cannot add listener on socket %s: %s", server->priv->socket_file, error->message);
+            return FALSE;
+        }
 		g_message ("server is listening on socket %s\n", server->priv->socket_file);
 
     	if (socket)
@@ -220,7 +238,7 @@ gspeechd_server_new (guint n_parameters, GParameter *parameters)
         	g_object_unref (address);
 	}
 
-	return server;
+    return TRUE;
 }
 
 static gboolean

@@ -186,8 +186,10 @@ gspeechd_server_new (guint n_parameters, GParameter *parameters)
 	}
 
 	if (server->priv->method == GSPEECHD_SERVER_INET_SOCKET) {
-		g_socket_listener_add_inet_port (G_SOCKET_LISTENER (server), server->priv->port, NULL, &error);
-		g_print ("server is listening on port %d\n", server->priv->port);
+		if (!g_socket_listener_add_inet_port (G_SOCKET_LISTENER (server), server->priv->port, NULL, &error)) {
+		    g_error ("Cannot add listener on port %d: %s", server->priv->port, error->message);
+		}
+		g_message ("server is listening on port %d\n", server->priv->port);
 	}
 	else {
 		GSocket *socket;
@@ -210,7 +212,7 @@ gspeechd_server_new (guint n_parameters, GParameter *parameters)
     	    g_error ("Cannot listen in socket: %s", error->message);
 
 		g_socket_listener_add_socket (G_SOCKET_LISTENER (server), socket, NULL, &error);
-		g_print ("server is listening on socket %s\n", server->priv->socket_file);
+		g_message ("server is listening on socket %s\n", server->priv->socket_file);
 
     	if (socket)
         	g_object_unref (socket);
@@ -232,9 +234,6 @@ gspeechd_server_incoming (GSocketService    *service,
 
 	g_return_val_if_fail (GSPEECHD_IS_SERVER (server), FALSE);
 	g_return_val_if_fail (G_IS_SOCKET_CONNECTION (connection), FALSE);
-
-	g_printf ("%s\n", __FUNCTION__);
-
 	priv = server->priv;
 
 	/* Store the client for tracking things */

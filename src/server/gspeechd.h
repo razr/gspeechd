@@ -1,4 +1,4 @@
-/* gspeechd-options.h
+/* gspeechd.h
  *
  * Copyright (C) 2015 Brailcom, o.p.s.
  *
@@ -17,27 +17,19 @@
  * 
  * Author: Andrei Kholodnyi <andrei.kholodnyi@gmail.com>
  */
+ 
+#ifndef GSPEECHD_H
+#define GSPEECHD_H
 
-#ifndef GSPEECHD_OPTIONS_H
-#define GSPEECHD_OPTIONS_H
+#define GSPEECHD_DEFAULT_OPTION_MODE GSPEECHD_MODE_DAEMON
+#define GSPEECHD_DEFAULT_OPTION_PID_FILE "default"
+#define GSPEECHD_DEFAULT_OPTION_LOG_LEVEL 1
+#define GSPEECHD_DEFAULT_OPTION_LOG_DIR "/var/log/gspeechd"
 
-#include <glib.h>
+/* Mode of gspeechd execution */
+typedef enum {
+	GSPEECHD_MODE_DAEMON,
+	GSPEECHD_MODE_SINGLE
+} gspeechd_mode;
 
-#include "gspeechd.h"
-
-G_BEGIN_DECLS
-
-typedef struct _gspeechd_options {
-	gspeechd_mode mode;
-	gchar  *pid_file;
-	gint	log_level;
-	gchar  *log_dir;
-} gspeechd_options;
-
-gboolean gspeechd_options_parse (int argc, char * argv[]);
-const gspeechd_options * gspeechd_options_get (void);
-GArray * gspeechd_options_server_get (void);
-
-G_END_DECLS
-
-#endif /* GSPEECHD_OPTIONS_H */
+#endif /* GSPEECHD_H */

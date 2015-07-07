@@ -29,12 +29,8 @@
 #include <stdlib.h>
 
 #include "gspeechd-options.h"
+#include "gspeechd.h"
 #include "gspeechd-server.h"
-
-#define GSPEECHD_DEFAULT_OPTION_MODE GSPEECHD_MODE_DAEMON
-#define GSPEECHD_DEFAULT_OPTION_PID_FILE "default"
-#define GSPEECHD_DEFAULT_OPTION_LOG_LEVEL 1
-#define GSPEECHD_DEFAULT_OPTION_LOG_DIR "/var/log/gspeechd"
 
 static gspeechd_options cmd_options = 
 {

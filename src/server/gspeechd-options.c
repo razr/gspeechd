@@ -62,11 +62,22 @@ static gboolean
 parse_port_cb (const gchar *option_name, const gchar *value,
 		 gpointer data, GError **error)
 {
+	gint val;
+	gchar *endptr;
+
+	val = g_ascii_strtoll (value, &endptr, 10);
+
+	/* check if conversion fails */
+	if(endptr == value) {
+		g_error ("port coversion fails: %s", value);
+		return TRUE;
+	}
+
 	GParameter *param = g_slice_new0 (GParameter);
 
 	param->name = g_strdup ("port");
 	g_value_init (&param->value, G_TYPE_UINT);
-	g_value_set_uint (&param->value, atoi (value));
+	g_value_set_uint (&param->value, val);
 	g_array_append_val (server_parameters, *param);
 
 	return TRUE;
